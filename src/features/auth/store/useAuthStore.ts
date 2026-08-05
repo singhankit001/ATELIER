@@ -29,7 +29,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   isAuthenticated: false,
-  isInitializing: true,
+  isInitializing: false,
   isPortalActive: false,
 
   setPortalActive: (active: boolean) => set({ isPortalActive: active }),
@@ -60,17 +60,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   
   hydrate: async () => {
     try {
-      const hydrationPromise = (async () => {
-        const token = await storage.getItem<string>('AUTH_TOKEN');
-        const user = await storage.getItem<User>('AUTH_USER');
-        return { token, user };
-      })();
-
-      const timeoutPromise = new Promise<{token: null, user: null}>((_, reject) => {
-        setTimeout(() => reject(new Error('Hydration timeout exceeded 250ms')), 250);
-      });
-
-      const { token, user } = await Promise.race([hydrationPromise, timeoutPromise]);
+      const token = await storage.getItem<string>('AUTH_TOKEN');
+      const user = await storage.getItem<User>('AUTH_USER');
       
       if (token && user) {
         set({ token, user, isAuthenticated: true, isInitializing: false });

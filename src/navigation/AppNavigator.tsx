@@ -13,7 +13,6 @@ const Tab = createBottomTabNavigator();
 export const AppNavigator = () => {
   return (
     <Tab.Navigator
-      initialRouteName="Gallery"
       tabBar={(props) => <FloatingGlassNav {...props} />}
       screenOptions={{
         headerShown: false,
