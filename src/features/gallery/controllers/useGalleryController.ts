@@ -9,43 +9,35 @@ export const useGalleryController = () => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<GalleryFilter>('ALL');
   const [page, setPage] = useState(1);
-  const [accumulatedImages, setAccumulatedImages] = useState<ImageItem[]>([]);
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);
 
   const query = useQuery({
-    queryKey: ['gallery', 'official-50', page],
-    queryFn: async () => {
-      const data = await galleryService.fetchImages(page, 50);
-      if (page === 1) {
-        setAccumulatedImages(data);
-      } else {
-        setAccumulatedImages((prev) => {
-          const existingIds = new Set(prev.map((img) => img.id));
-          const uniqueNew = data.filter((img) => !existingIds.has(img.id));
-          return [...prev, ...uniqueNew];
-        });
-      }
-      return data;
-    },
+    queryKey: ['gallery', 'official-50'],
+    queryFn: () => galleryService.fetchImages(1, 50),
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
+
+  const allImages = query.data || [];
+
+  // Batch display pagination: load 15 initially, increment by 15 on scroll
+  const displayedImages = useMemo(() => {
+    return allImages.slice(0, page * 15);
+  }, [allImages, page]);
+
+  const loadMore = useCallback(() => {
+    if (displayedImages.length < allImages.length) {
+      setPage((prev) => prev + 1);
+    }
+  }, [displayedImages.length, allImages.length]);
 
   const handleRefresh = useCallback(async () => {
     setPage(1);
     await query.refetch();
   }, [query]);
 
-  const loadMore = useCallback(async () => {
-    if (query.isFetching || isFetchingMore || accumulatedImages.length < 50 * page) return;
-    setIsFetchingMore(true);
-    setPage((prev) => prev + 1);
-    setIsFetchingMore(false);
-  }, [query.isFetching, isFetchingMore, accumulatedImages.length, page]);
-
   const filteredImages = useMemo(() => {
-    let result = accumulatedImages;
+    let result = displayedImages;
 
     if (debouncedSearch) {
       const lowerSearch = debouncedSearch.trim().toLowerCase();
@@ -69,7 +61,7 @@ export const useGalleryController = () => {
     }
 
     return result;
-  }, [accumulatedImages, debouncedSearch, filter]);
+  }, [displayedImages, debouncedSearch, filter]);
 
   return {
     ...query,
@@ -81,6 +73,5 @@ export const useGalleryController = () => {
     isEmpty: filteredImages.length === 0 && !query.isLoading,
     handleRefresh,
     loadMore,
-    isFetchingMore,
   };
 };
