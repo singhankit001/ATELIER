@@ -42,7 +42,7 @@ export const GalleryItem = React.memo(({ item, index, scrollY, onPress }: Galler
           accessibilityLabel={`Artwork by ${item.author}`}
         >
           <Image
-            source={item.url}
+            source={item.download_url}
             placeholder={item.thumbnailUrl}
             style={styles.image}
             contentFit="cover"

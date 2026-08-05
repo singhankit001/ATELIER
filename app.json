@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "premium-gallery-app",
-    "slug": "premium-gallery-app",
+    "name": "ATELIER",
+    "slug": "atelier",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.premium-gallery-app"
+      "bundleIdentifier": "com.atelier.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +17,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.anonymous.premiumgalleryapp"
+      "package": "com.atelier.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -46,41 +46,43 @@ export const ProfileScreen = () => {
         {/* Profile Card */}
         <Animated.View entering={FadeInDown.delay(100).duration(600).springify()}>
           <GlassCard style={styles.profileCard}>
-            <View style={styles.membershipHeader}>
-              <Award size={16} color={theme.colors.accent} />
-              <Typography variant="caption" weight="bold" color={theme.colors.accent} style={{ marginLeft: 6, letterSpacing: 1.2 }}>
-                PATRON MEMBERSHIP • NO. {user?.id || '89201'}
-              </Typography>
-            </View>
-
-            <Pressable onPress={() => setAvatarModalVisible(true)} style={styles.avatarPressable}>
-              {user?.avatarUrl ? (
-                <Image source={{ uri: user.avatarUrl }} style={styles.avatar} contentFit="cover" />
-              ) : (
-                <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.primary }]}>
-                  <Typography variant="headingL" color={theme.colors.surface}>
-                    {user?.name?.charAt(0).toUpperCase() || 'P'}
-                  </Typography>
-                </View>
-              )}
-              <View style={[styles.editBadge, { backgroundColor: theme.colors.surface }]}>
-                <Edit2 size={12} color={theme.colors.textPrimary} />
+            <View style={styles.cardInner}>
+              <View style={styles.membershipHeader}>
+                <Award size={16} color={theme.colors.accent} />
+                <Typography variant="caption" weight="bold" color={theme.colors.accent} style={{ marginLeft: 6, letterSpacing: 1.2 }}>
+                  PATRON MEMBERSHIP • NO. {user?.id || '89201'}
+                </Typography>
               </View>
-            </Pressable>
 
-            <View style={styles.profileInfo}>
-              <Typography variant="headingM" weight="bold">{user?.name || 'Curator Patron'}</Typography>
-              <Typography variant="body" color={theme.colors.textSecondary}>{user?.email || 'patron@museum.art'}</Typography>
-              {user?.city && (
-                <Typography variant="caption" color={theme.colors.textTertiary} style={{ marginTop: 2 }}>{user.city}</Typography>
-              )}
+              <Pressable onPress={() => setAvatarModalVisible(true)} style={styles.avatarPressable}>
+                {user?.avatarUrl ? (
+                  <Image source={{ uri: user.avatarUrl }} style={styles.avatar} contentFit="cover" />
+                ) : (
+                  <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.primary }]}>
+                    <Typography variant="headingL" color={theme.colors.surface}>
+                      {user?.name?.charAt(0).toUpperCase() || 'P'}
+                    </Typography>
+                  </View>
+                )}
+                <View style={[styles.editBadge, { backgroundColor: theme.colors.surface }]}>
+                  <Edit2 size={12} color={theme.colors.textPrimary} />
+                </View>
+              </Pressable>
+
+              <View style={styles.profileInfo}>
+                <Typography variant="headingM" weight="bold" style={{ textAlign: 'center' }}>{user?.name || 'Curator Patron'}</Typography>
+                <Typography variant="body" color={theme.colors.textSecondary} style={{ textAlign: 'center', marginTop: 2 }}>{user?.email || 'patron@museum.art'}</Typography>
+                {user?.city && (
+                  <Typography variant="caption" color={theme.colors.textTertiary} style={{ marginTop: 4, textAlign: 'center' }}>{user.city}</Typography>
+                )}
+              </View>
+
+              <InteractiveAction 
+                icon={<Edit2 size={18} color={theme.colors.textPrimary} />} 
+                label="Update Patron Credentials" 
+                onPress={() => setEditModalVisible(true)} 
+              />
             </View>
-
-            <InteractiveAction 
-              icon={<Edit2 size={20} color={theme.colors.textPrimary} />} 
-              label="Update Patron Credentials" 
-              onPress={() => setEditModalVisible(true)} 
-            />
           </GlassCard>
         </Animated.View>
 
@@ -198,10 +200,12 @@ const styles = StyleSheet.create({
   },
   profileCard: {
     marginHorizontal: 24,
-    padding: 24,
     borderRadius: 24,
-    alignItems: 'center',
     marginBottom: 32,
+  },
+  cardInner: {
+    alignItems: 'center',
+    width: '100%',
   },
   membershipHeader: {
     flexDirection: 'row',
@@ -215,38 +219,41 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(184, 134, 11, 0.2)',
   },
   avatarPressable: {
-    marginBottom: 16,
+    position: 'relative',
+    alignSelf: 'center',
+    marginVertical: 12,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
   },
   avatarPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     alignItems: 'center',
     justifyContent: 'center',
   },
   editBadge: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    bottom: 2,
+    right: 2,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
   profileInfo: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
+    width: '100%',
   },
   sections: {
     paddingHorizontal: 24,

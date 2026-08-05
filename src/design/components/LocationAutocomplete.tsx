@@ -115,10 +115,21 @@ interface SearchModalProps {
   onSelect: (item: LocationSuggestion) => void;
 }
 
+const POPULAR_INDIAN_CITIES: LocationSuggestion[] = [
+  { place_id: 101, display_name: 'Mumbai, Maharashtra, India', address: { city: 'Mumbai', state: 'Maharashtra' }, lat: '19.0760', lon: '72.8777' },
+  { place_id: 102, display_name: 'New Delhi, Delhi, India', address: { city: 'New Delhi', state: 'Delhi' }, lat: '28.6139', lon: '77.2090' },
+  { place_id: 103, display_name: 'Bengaluru, Karnataka, India', address: { city: 'Bengaluru', state: 'Karnataka' }, lat: '12.9716', lon: '77.5946' },
+  { place_id: 104, display_name: 'Hyderabad, Telangana, India', address: { city: 'Hyderabad', state: 'Telangana' }, lat: '17.3850', lon: '78.4867' },
+  { place_id: 105, display_name: 'Chennai, Tamil Nadu, India', address: { city: 'Chennai', state: 'Tamil Nadu' }, lat: '13.0827', lon: '80.2707' },
+  { place_id: 106, display_name: 'Kolkata, West Bengal, India', address: { city: 'Kolkata', state: 'West Bengal' }, lat: '22.5726', lon: '88.3639' },
+  { place_id: 107, display_name: 'Pune, Maharashtra, India', address: { city: 'Pune', state: 'Maharashtra' }, lat: '18.5204', lon: '73.8567' },
+  { place_id: 108, display_name: 'Jaipur, Rajasthan, India', address: { city: 'Jaipur', state: 'Rajasthan' }, lat: '26.9124', lon: '75.7873' },
+];
+
 const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, onSelect }) => {
   const { theme } = useAppTheme();
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>(POPULAR_INDIAN_CITIES);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const inputRef = useRef<TextInput>(null);
@@ -126,7 +137,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, onSelect })
   const fetch_ = useCallback((text: string) => {
     if (debounceTimer) clearTimeout(debounceTimer);
     if (text.trim().length < 2) {
-      setSuggestions([]);
+      setSuggestions(POPULAR_INDIAN_CITIES);
       setSearched(false);
       return;
     }
@@ -147,7 +158,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, onSelect })
 
   const handleClose = () => {
     setQuery('');
-    setSuggestions([]);
+    setSuggestions(POPULAR_INDIAN_CITIES);
     setSearched(false);
     onClose();
   };
@@ -165,7 +176,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, onSelect })
         {/* Modal header */}
         <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
           <Typography variant="title" weight="bold">
-            Choose Location
+            Select City in India
           </Typography>
           <Pressable onPress={handleClose} hitSlop={16} style={styles.modalClose}>
             <X size={22} color={theme.colors.textPrimary} />
@@ -192,7 +203,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, onSelect })
               setQuery(t);
               fetch_(t);
             }}
-            placeholder="Type a city, area or district in India..."
+            placeholder="Search city, area or district in India..."
             placeholderTextColor={theme.colors.textTertiary}
             autoCorrect={false}
             autoCapitalize="words"
@@ -203,6 +214,14 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, onSelect })
             <ActivityIndicator size="small" color={theme.colors.accent} style={{ marginLeft: 6 }} />
           )}
         </View>
+
+        {!query.trim() && (
+          <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 }}>
+            <Typography variant="caption" weight="bold" color={theme.colors.accent} style={{ letterSpacing: 1.1 }}>
+              RECOMMENDED INDIAN CITIES
+            </Typography>
+          </View>
+        )}
 
         {/* Results list */}
         <FlatList
@@ -274,24 +293,6 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, onSelect })
                   style={{ marginTop: 4, textAlign: 'center' }}
                 >
                   Try a city name like "Mumbai" or "Bengaluru"
-                </Typography>
-              </View>
-            ) : !searched ? (
-              <View style={styles.emptyState}>
-                <MapPin size={32} color={theme.colors.textTertiary} />
-                <Typography
-                  variant="body"
-                  color={theme.colors.textSecondary}
-                  style={{ marginTop: 12, textAlign: 'center' }}
-                >
-                  Start typing to search
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color={theme.colors.textTertiary}
-                  style={{ marginTop: 4, textAlign: 'center' }}
-                >
-                  Results are limited to India only
                 </Typography>
               </View>
             ) : null
