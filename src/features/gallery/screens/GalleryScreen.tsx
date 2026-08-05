@@ -28,6 +28,8 @@ export const GalleryScreen = () => {
     refetch,
     isRefetching,
     isEmpty,
+    handleRefresh,
+    loadMore,
   } = useGalleryController();
 
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
@@ -86,7 +88,9 @@ export const GalleryScreen = () => {
               renderItem={renderItem}
               contentContainerStyle={styles.listContent}
               refreshing={isRefetching}
-              onRefresh={refetch}
+              onRefresh={handleRefresh}
+              onEndReached={loadMore}
+              onEndReachedThreshold={0.4}
               ListEmptyComponent={
                 isLoading ? (
                   <View style={{ marginTop: 32 }}>

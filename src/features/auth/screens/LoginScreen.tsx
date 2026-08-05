@@ -40,6 +40,8 @@ export const LoginScreen = ({ navigation }: Props) => {
 
   const { control, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onBlur',
     defaultValues: {
       email: '',
       password: '',

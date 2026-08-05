@@ -11,10 +11,10 @@ export interface ImageItem {
 }
 
 export const galleryService = {
-  fetchImages: async (): Promise<ImageItem[]> => {
+  fetchImages: async (page: number = 1, limit: number = 50): Promise<ImageItem[]> => {
     try {
       const response = await apiClient.get<ImageItem[]>(
-        'https://picsum.photos/v2/list?page=1&limit=30'
+        `https://picsum.photos/v2/list?page=${page}&limit=${limit}`
       );
       
       return response.data.map((item) => ({

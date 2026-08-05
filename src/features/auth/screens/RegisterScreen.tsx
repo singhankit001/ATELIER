@@ -64,6 +64,8 @@ export const RegisterScreen = ({ navigation }: Props) => {
 
   const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onBlur',
     defaultValues: { name: '', email: '', gender: undefined, mobile: '', address: '', city: '', password: '', confirmPassword: '' },
   });
 

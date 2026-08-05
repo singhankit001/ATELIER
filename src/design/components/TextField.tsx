@@ -47,6 +47,9 @@ export const TextField = React.forwardRef<TextInput, TextFieldProps>(({ label, e
   });
 
   const borderStyle = useAnimatedStyle(() => {
+    if (error) {
+      return { borderColor: theme.colors.error };
+    }
     return {
       borderColor: interpolateColor(
         focusAnim.value,
