@@ -10,11 +10,20 @@ import { SelectionField } from '../../../design/components/SelectionField';
 import { Button } from '../../../design/components/Button';
 import { Toast, useToastStore } from '../../../design/components/Toast';
 import { theme } from '../../../core/theme/theme';
+import { useAppTheme } from '../../../core/theme/ThemeProvider';
+import { palette } from '../../../core/theme/tokens';
 import { useAuthStore } from '../store/useAuthStore';
 import { authService } from '../services/authService';
-import { SceneProvider } from '../../../experience/scene/SceneProvider';
+import { CaveSceneProvider } from '../../../experience/scene/CaveSceneProvider';
 
 import { AuthNavigationProp } from '../../../navigation/types';
+
+// See LoginScreen for why this reads from the raw palette rather than the
+// reactive theme — text drawn directly on the cave (not inside a glass
+// card) must stay legible against a background that stays dark regardless
+// of the app's own light/dark setting.
+const HEADER_TITLE_COLOR = palette.warmIvory;
+const HEADER_SUBTITLE_COLOR = 'rgba(253, 251, 247, 0.62)';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -49,13 +58,14 @@ const cityOptions = [
   { label: 'Paris', value: 'paris' },
 ];
 
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { GlassCard } from '../../../design/components/GlassCard';
 
 export const RegisterScreen = ({ navigation }: Props) => {
+  const { theme: activeTheme } = useAppTheme();
   const login = useAuthStore((state) => state.login);
   const showToast = useToastStore((state) => state.showToast);
-  
+
   const emailRef = useRef<TextInput>(null);
   const mobileRef = useRef<TextInput>(null);
   const addressRef = useRef<TextInput>(null);
@@ -82,25 +92,29 @@ export const RegisterScreen = ({ navigation }: Props) => {
   };
 
   return (
-    <SceneProvider showArch={true}>
+    <CaveSceneProvider>
+      {({ logoStyle, uiStyle }) => (
+      <>
       <Toast />
-      <KeyboardAvoidingView 
-        style={styles.container} 
+      <KeyboardAvoidingView
+        style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <Animated.View entering={FadeInDown.duration(600).springify()}>
+          <Animated.View style={logoStyle}>
             <View style={styles.header}>
-              <Typography variant="headingXL" weight="bold">Membership Application</Typography>
-              <Typography variant="body" color={theme.colors.textSecondary} style={{ marginTop: theme.spacing.sm }}>
+              <Typography variant="headingXL" weight="bold" color={HEADER_TITLE_COLOR}>Membership Application</Typography>
+              <Typography variant="body" color={HEADER_SUBTITLE_COLOR} style={{ marginTop: theme.spacing.sm }}>
                 Apply for patron membership to access curated exhibitions.
               </Typography>
             </View>
+          </Animated.View>
 
-            <GlassCard style={styles.glassCard}>
+          <Animated.View style={uiStyle}>
+            <GlassCard intensity={activeTheme.glassLevels.elevated} style={styles.glassCard}>
               <View style={styles.form}>
                 <Controller
                   control={control}
@@ -272,7 +286,9 @@ export const RegisterScreen = ({ navigation }: Props) => {
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SceneProvider>
+      </>
+      )}
+    </CaveSceneProvider>
   );
 };
 

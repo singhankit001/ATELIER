@@ -7,8 +7,7 @@ export const useArtworkController = (image: ImageItem | null) => {
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
-  const [isSharing, setIsSharing] = useState(false);
-  
+
   const toggleFavorite = useFavoritesStore(state => state.toggleFavorite);
   const isFavorite = useFavoritesStore(state => state.isFavorite(image?.id || ''));
 
@@ -43,23 +42,6 @@ export const useArtworkController = (image: ImageItem | null) => {
     }
   }, [image, isDownloading]);
 
-  const shareImage = useCallback(async (onError: (message: string) => void) => {
-    if (!image || isSharing) return;
-
-    setIsSharing(true);
-    try {
-      await artworkRepository.shareImage(image.download_url, image.id);
-    } catch (error) {
-      if (error instanceof ArtworkError) {
-        onError(error.message);
-      } else {
-        onError('An unexpected error occurred.');
-      }
-    } finally {
-      setIsSharing(false);
-    }
-  }, [image, isSharing]);
-
   return {
     controlsVisible,
     toggleControls,
@@ -68,7 +50,5 @@ export const useArtworkController = (image: ImageItem | null) => {
     isDownloading,
     downloadProgress,
     downloadImage,
-    isSharing,
-    shareImage,
   };
 };

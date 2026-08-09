@@ -1,10 +1,9 @@
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
-import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 
 export class ArtworkError extends Error {
-  constructor(message: string, public readonly code: 'PERMISSION_DENIED' | 'DOWNLOAD_FAILED' | 'SAVE_FAILED' | 'SHARE_FAILED') {
+  constructor(message: string, public readonly code: 'PERMISSION_DENIED' | 'DOWNLOAD_FAILED' | 'SAVE_FAILED') {
     super(message);
     this.name = 'ArtworkError';
   }
@@ -51,28 +50,7 @@ export const artworkRepository = {
       throw new ArtworkError('An error occurred while saving the image.', 'SAVE_FAILED');
     }
   },
-
-  /**
-   * Downloads the image to a temporary file and triggers native sharing.
-   */
-  async shareImage(url: string, id: string): Promise<void> {
-    try {
-      const isAvailable = await Sharing.isAvailableAsync();
-      if (!isAvailable) {
-        throw new ArtworkError('Sharing is not available on this device.', 'SHARE_FAILED');
-      }
-
-      const fileUri = ((FileSystem as any).documentDirectory || '') + `share_${id}.jpg`;
-      
-      const result = await FileSystem.downloadAsync(url, fileUri);
-      
-      await Sharing.shareAsync(result.uri, {
-        mimeType: 'image/jpeg',
-        dialogTitle: 'Share Artwork',
-      });
-    } catch (error) {
-      if (error instanceof ArtworkError) throw error;
-      throw new ArtworkError('An error occurred while sharing the image.', 'SHARE_FAILED');
-    }
-  }
 };
+
+// Sharing has moved to `features/sharing` (see useArtworkShare / sharingService) —
+// it now owns its own error type, cache-only temp files, and guaranteed cleanup.

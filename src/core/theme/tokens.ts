@@ -25,7 +25,12 @@ export const palette = {
 export const lightColors = {
   background: palette.warmIvory,
   surface: palette.boneWhite,
-  surfaceGlass: 'rgba(244, 240, 234, 0.75)',
+  // Three-tier glass system — subtle (barely-there sheen) → medium (default
+  // card material) → elevated (modals, high-chrome surfaces like the cave UI).
+  surfaceGlass01: 'rgba(244, 240, 234, 0.45)',
+  surfaceGlass02: 'rgba(244, 240, 234, 0.75)',
+  surfaceGlass03: 'rgba(244, 240, 234, 0.92)',
+  surfaceGlass: 'rgba(244, 240, 234, 0.75)', // alias of surfaceGlass02, kept for existing call sites
   textPrimary: palette.obsidian,
   textSecondary: palette.slate,
   textTertiary: palette.stoneGray,
@@ -41,7 +46,10 @@ export const lightColors = {
 export const darkColors = {
   background: palette.obsidian,
   surface: palette.graphite,
-  surfaceGlass: 'rgba(22, 22, 24, 0.78)',
+  surfaceGlass01: 'rgba(22, 22, 24, 0.45)',
+  surfaceGlass02: 'rgba(22, 22, 24, 0.78)',
+  surfaceGlass03: 'rgba(22, 22, 24, 0.92)',
+  surfaceGlass: 'rgba(22, 22, 24, 0.78)', // alias of surfaceGlass02, kept for existing call sites
   textPrimary: palette.warmIvory,
   textSecondary: palette.stoneGray,
   textTertiary: palette.slate,
@@ -52,6 +60,14 @@ export const darkColors = {
   error: '#E0988E',
   success: '#819E53',
   surfaceHighlight: 'rgba(255, 255, 255, 0.08)',
+};
+
+// Blur intensities paired with the glass tiers above (BlurView `intensity`,
+// 0–100, theme-agnostic — tint already varies by isDark at the call site).
+export const glassLevels = {
+  subtle: 18,
+  medium: 32,
+  elevated: 50,
 };
 
 // Default static colors (fallback for non-context usage)
@@ -79,6 +95,7 @@ export const typography = {
     serif: 'Georgia',
   },
   size: {
+    micro: 10,
     label: 12,
     caption: 14,
     body: 16,

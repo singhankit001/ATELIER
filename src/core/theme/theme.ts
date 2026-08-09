@@ -1,4 +1,4 @@
-import { colors, spacing, typography, elevation, borderRadii, springs, motion } from './tokens';
+import { colors, spacing, typography, elevation, borderRadii, springs, motion, glassLevels } from './tokens';
 
 /**
  * The unified Theme object.
@@ -12,6 +12,7 @@ export const theme = {
   borderRadii,
   springs,
   motion,
+  glassLevels,
 };
 
 export type Theme = typeof theme;

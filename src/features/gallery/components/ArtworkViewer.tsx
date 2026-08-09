@@ -1,11 +1,11 @@
 import React, { useEffect, useCallback } from 'react';
-import { Modal, StyleSheet, View, ActivityIndicator } from 'react-native';
+import { Modal, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
-import Animated, { 
-  FadeIn, 
-  FadeOut, 
-  useSharedValue, 
-  useAnimatedStyle, 
+import Animated, {
+  FadeIn,
+  FadeOut,
+  useSharedValue,
+  useAnimatedStyle,
   withSpring,
   withTiming,
   runOnJS,
@@ -14,13 +14,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BlurView } from 'expo-blur';
-import { X, Heart, Download, Share, CheckCircle2 } from 'lucide-react-native';
+import { X, Heart, Download, Share } from 'lucide-react-native';
 import { Typography } from '../../../design/components/Typography';
 import { theme } from '../../../core/theme/theme';
 import { ImageItem } from '../services/galleryService';
 import { useArtworkController } from '../controllers/useArtworkController';
 import { useToastStore } from '../../../design/components/Toast';
-import { usePressEffect } from '../../../experience/interactions/usePressEffect';
+import { GlassIconButton } from '../../../design/components/GlassIconButton';
+import { useArtworkShare } from '../../sharing/hooks/useArtworkShare';
 
 interface ArtworkViewerProps {
   visible: boolean;
@@ -30,19 +31,6 @@ interface ArtworkViewerProps {
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
-
-const IconButton = ({ icon: Icon, onPress, color, fill = 'none' }: any) => {
-  const { animatedStyle, onPressIn, onPressOut } = usePressEffect(0.85);
-  return (
-    <Animated.View style={animatedStyle}>
-      <GestureDetector gesture={Gesture.Tap().onEnd(() => runOnJS(onPress)())}>
-        <View style={styles.iconButton}>
-          <Icon color={color} fill={fill} size={28} />
-        </View>
-      </GestureDetector>
-    </Animated.View>
-  );
-};
 
 export const ArtworkViewer = ({ visible, image, onClose }: ArtworkViewerProps) => {
   const showToast = useToastStore(state => state.showToast);
@@ -54,8 +42,17 @@ export const ArtworkViewer = ({ visible, image, onClose }: ArtworkViewerProps) =
     handleToggleFavorite,
     isDownloading,
     downloadImage,
-    shareImage
   } = useArtworkController(image);
+
+  const { isPreparing: isSharing, hasError: shareFailed, errorMessage: shareError, share } = useArtworkShare();
+
+  // Surface genuine share failures only — a user dismissing the native
+  // sheet resolves quietly with no toast, per the sharing UX contract.
+  useEffect(() => {
+    if (shareFailed && shareError) {
+      showToast(shareError, 'error');
+    }
+  }, [shareFailed, shareError]);
 
   // Gesture values
   const scale = useSharedValue(1);
@@ -210,32 +207,42 @@ export const ArtworkViewer = ({ visible, image, onClose }: ArtworkViewerProps) =
               
               {/* Header */}
               <AnimatedBlurView intensity={40} tint="dark" style={styles.header}>
-                <IconButton icon={X} onPress={handleClose} color={theme.colors.surface} />
+                <GlassIconButton
+                  icon={X}
+                  onPress={handleClose}
+                  color={theme.colors.surface}
+                  accessibilityLabel="Close artwork viewer"
+                />
                 <View style={styles.actions}>
-                  {isDownloading ? (
-                    <View style={styles.iconButton}>
-                      <ActivityIndicator color={theme.colors.surface} />
-                    </View>
-                  ) : (
-                    <IconButton 
-                      icon={Download} 
-                      onPress={() => downloadImage(
-                        () => showToast('Saved to Gallery', 'success'),
-                        (msg) => showToast(msg, 'error')
-                      )} 
-                      color={theme.colors.surface} 
-                    />
-                  )}
-                  <IconButton 
-                    icon={Share} 
-                    onPress={() => shareImage((msg) => showToast(msg, 'error'))} 
-                    color={theme.colors.surface} 
+                  <GlassIconButton
+                    icon={Download}
+                    loading={isDownloading}
+                    onPress={() => downloadImage(
+                      () => showToast('Saved to Gallery', 'success'),
+                      (msg) => showToast(msg, 'error')
+                    )}
+                    color={theme.colors.surface}
+                    accessibilityLabel="Save artwork to your device"
                   />
-                  <IconButton 
-                    icon={Heart} 
-                    onPress={handleToggleFavorite} 
-                    color={isFavorite ? theme.colors.error : theme.colors.surface} 
-                    fill={isFavorite ? theme.colors.error : 'transparent'} 
+                  <GlassIconButton
+                    icon={Share}
+                    loading={isSharing}
+                    onPress={() => image && share({
+                      id: image.id,
+                      imageUrl: image.download_url,
+                      author: image.author,
+                      width: image.width,
+                      height: image.height,
+                    })}
+                    color={theme.colors.surface}
+                    accessibilityLabel="Share this artwork"
+                  />
+                  <GlassIconButton
+                    icon={Heart}
+                    onPress={handleToggleFavorite}
+                    color={isFavorite ? theme.colors.error : theme.colors.surface}
+                    fill={isFavorite ? theme.colors.error : 'transparent'}
+                    accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                   />
                 </View>
               </AnimatedBlurView>
@@ -296,13 +303,6 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: theme.spacing.md,
-  },
-  iconButton: {
-    padding: theme.spacing.xs,
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   footer: {
     position: 'absolute',

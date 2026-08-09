@@ -34,6 +34,20 @@ export const authService = {
     throw new Error('Invalid email or password. Please check your credentials.');
   },
 
+  /**
+   * A local-only guest session — no network, no persisted account. Lets a
+   * visitor step into the collection immediately without committing to
+   * membership. Clearly not gallery data, so this doesn't touch the
+   * strict "real Picsum data only" rule that governs the artwork feed.
+   */
+  loginAsGuest: async (): Promise<{ user: User; token: string }> => {
+    const guestId = `guest-${Date.now()}`;
+    return {
+      user: { id: guestId, name: 'Guest Visitor', email: `${guestId}@atelier.local` },
+      token: `guest-session-${guestId}`,
+    };
+  },
+
   register: async (
     name: string, 
     email: string, 
