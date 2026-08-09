@@ -43,11 +43,15 @@ export const useCaveIntro = (play: boolean | null, onDone?: () => void) => {
     logoOpacity.value = withDelay(timings.logo[0], withTiming(1, { duration: timings.logo[1], easing }));
     logoTranslateY.value = withDelay(timings.logo[0], withTiming(0, { duration: timings.logo[1], easing }));
 
-    const uiDone = onDone ? () => runOnJS(onDone)() : undefined;
-    uiOpacity.value = withDelay(timings.ui[0], withTiming(1, { duration: timings.ui[1], easing }, uiDone && ((finished) => {
-      'worklet';
-      if (finished) uiDone();
-    })));
+    uiOpacity.value = withDelay(
+      timings.ui[0],
+      withTiming(1, { duration: timings.ui[1], easing }, (finished) => {
+        'worklet';
+        if (finished && onDone) {
+          runOnJS(onDone)();
+        }
+      })
+    );
     uiTranslateY.value = withDelay(timings.ui[0], withTiming(0, { duration: timings.ui[1], easing }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [play, reducedMotion]);
