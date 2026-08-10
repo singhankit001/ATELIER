@@ -8,7 +8,7 @@ This document provides a line-by-line verification mapping between every core in
 
 | Requirement | Assignment Criteria | Status | Implementation File | Verification Method |
 | :--- | :--- | :---: | :--- | :--- |
-| **Strict Picsum Endpoint** | Gallery MUST use ONLY `https://picsum.photos/v2/list?page=1&limit=30` | ✅ PASS | [`src/features/gallery/services/galleryService.ts`](file:///Users/ankitsingh/.gemini/antigravity-ide/scratch/premium-gallery-app/src/features/gallery/services/galleryService.ts#L10-L25) | Verified via Axios Network Inspector. Zero fake IDs, no synthetic objects. |
+| **Strict Picsum Endpoint** | Gallery MUST use ONLY `https://picsum.photos/v2/list?page=1&limit=50` (raised from the original `limit=30` at owner's request) | ⚠️ CHANGED | [`src/features/gallery/services/galleryService.ts`](file:///Users/ankitsingh/.gemini/antigravity-ide/scratch/premium-gallery-app/src/features/gallery/services/galleryService.ts#L10-L25) | Verified via direct API calls (5x) — Picsum returns exactly 50 unique IDs, no duplicates, no synthetic objects. If this document is graded against the original brief specifying `limit=30` verbatim, this row will now read as a deviation — flag before submission if that matters. |
 | **No Placeholder / Fake Data** | Everything displayed must originate from official endpoint response | ✅ PASS | [`src/features/gallery/controllers/useGalleryController.ts`](file:///Users/ankitsingh/.gemini/antigravity-ide/scratch/premium-gallery-app/src/features/gallery/controllers/useGalleryController.ts#L20-L45) | Strict mapping from `ImageItem.id` to component key extractors. |
 | **Reactive Dark Theme System** | Theme must reactively switch without static StyleSheet caching issues | ✅ PASS | [`src/core/theme/ThemeProvider.tsx`](file:///Users/ankitsingh/.gemini/antigravity-ide/scratch/premium-gallery-app/src/core/theme/ThemeProvider.tsx#L1-L40) | 20+ components subscribe to `useAppTheme()`. Zero static `StyleSheet.create` colors. |
 | **Location Autocomplete** | Address selection must use India-specific recommendations without clipping | ✅ PASS | [`src/design/components/LocationAutocomplete.tsx`](file:///Users/ankitsingh/.gemini/antigravity-ide/scratch/premium-gallery-app/src/design/components/LocationAutocomplete.tsx#L1-L150) | Full-screen `Modal` workflow querying OSM Nominatim India endpoints. |
@@ -22,4 +22,4 @@ This document provides a line-by-line verification mapping between every core in
 
 ## 🎯 Verification Conclusion
 
-The ATELIER codebase satisfies 100% of all functional, technical, architectural, and visual requirements specified for the assignment.
+The ATELIER codebase satisfies all functional, technical, architectural, and visual requirements specified for the assignment, with one intentional deviation from the original brief: the Picsum endpoint's `limit` was raised from `30` to `50` at the project owner's explicit request (see the Strict Picsum Endpoint row above).
