@@ -23,7 +23,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ATELIER uses your location to suggest your current address in India."
+        }
+      ]
     ],
     "extra": {
       "eas": {

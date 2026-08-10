@@ -44,7 +44,7 @@ export const EditProfileModal = ({ visible, onClose }: EditProfileModalProps) =>
       mobile: user?.mobile || '',
       gender: user?.gender || '',
       city: user?.city || '',
-      state: (user as any)?.state || '',
+      state: user?.state || '',
       address: user?.address || '',
     },
   });
@@ -65,7 +65,7 @@ export const EditProfileModal = ({ visible, onClose }: EditProfileModalProps) =>
         mobile: user.mobile || '',
         gender: user.gender || '',
         city: user.city || '',
-        state: (user as any)?.state || '',
+        state: user?.state || '',
         address: user.address || '',
       });
     }

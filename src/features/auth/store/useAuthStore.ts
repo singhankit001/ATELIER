@@ -9,6 +9,7 @@ export interface User {
   mobile?: string;
   address?: string;
   city?: string;
+  state?: string;
   avatarUrl?: string;
 }
 

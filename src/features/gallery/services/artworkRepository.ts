@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { Platform } from 'react-native';
 
@@ -12,42 +12,52 @@ export class ArtworkError extends Error {
 export const artworkRepository = {
   /**
    * Downloads an image to the device gallery.
+   *
+   * Uses Expo SDK 57's rewritten `File`/`Paths` filesystem API — the older
+   * `FileSystem.createDownloadResumable`/`documentDirectory` functions
+   * still exist as named exports but are stubs that throw at runtime in
+   * this SDK version.
    */
   async downloadAndSaveImage(url: string, id: string, onProgress?: (progress: number) => void): Promise<void> {
     const { status } = await MediaLibrary.requestPermissionsAsync();
-    
+
     if (status !== 'granted') {
       throw new ArtworkError('Gallery permissions are required to save images.', 'PERMISSION_DENIED');
     }
 
-    const fileUri = ((FileSystem as any).documentDirectory || '') + `artwork_${id}.jpg`;
+    const destination = new File(Paths.cache, `atelier-download-${id}.jpg`);
+    let downloaded: File;
 
     try {
-      const downloadResumable = FileSystem.createDownloadResumable(
-        url,
-        fileUri,
-        {},
-        (downloadProgress) => {
-          const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
-          onProgress?.(progress);
-        }
-      );
+      downloaded = await File.downloadFileAsync(url, destination, {
+        idempotent: true,
+        onProgress: (progress) => {
+          if (progress.totalBytes > 0) {
+            onProgress?.(progress.bytesWritten / progress.totalBytes);
+          }
+        },
+      });
+    } catch (error) {
+      console.warn('[Download] failed:', error);
+      throw new ArtworkError('Failed to download image.', 'DOWNLOAD_FAILED');
+    }
 
-      const result = await downloadResumable.downloadAsync();
-      
-      if (!result) {
-        throw new ArtworkError('Failed to download image.', 'DOWNLOAD_FAILED');
-      }
+    try {
+      const asset = await MediaLibrary.createAssetAsync(downloaded.uri);
 
-      const asset = await MediaLibrary.createAssetAsync(result.uri);
-      
       // On Android, we might want to create an album. iOS handles it nicely in Recents.
       if (Platform.OS === 'android') {
         await MediaLibrary.createAlbumAsync('Gallery App', asset, false);
       }
     } catch (error) {
-      if (error instanceof ArtworkError) throw error;
+      console.warn('[Download] saving to library failed:', error);
       throw new ArtworkError('An error occurred while saving the image.', 'SAVE_FAILED');
+    } finally {
+      try {
+        if (downloaded.exists) downloaded.delete();
+      } catch (error) {
+        console.warn('[Download] temp file cleanup failed (non-fatal):', error);
+      }
     }
   },
 };

@@ -7,6 +7,7 @@ import { Typography } from '../../../design/components/Typography';
 import { TextField } from '../../../design/components/TextField';
 import { PasswordField } from '../../../design/components/PasswordField';
 import { SelectionField } from '../../../design/components/SelectionField';
+import { LocationAutocomplete, LocationValue } from '../../../design/components/LocationAutocomplete';
 import { Button } from '../../../design/components/Button';
 import { Toast, useToastStore } from '../../../design/components/Toast';
 import { theme } from '../../../core/theme/theme';
@@ -30,8 +31,9 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   gender: z.enum(['male', 'female', 'other'] as [string, ...string[]]).describe('Gender is required'),
   mobile: z.string().regex(/^\d{10}$/, 'Mobile must be exactly 10 digits'),
+  city: z.string().min(1, 'Please select your city or search your current location'),
+  state: z.string().optional(),
   address: z.string().min(5, 'Address is required'),
-  city: z.string().min(1, 'City is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -51,13 +53,6 @@ const genderOptions = [
   { label: 'Other', value: 'other' },
 ];
 
-const cityOptions = [
-  { label: 'New York', value: 'new_york' },
-  { label: 'London', value: 'london' },
-  { label: 'Tokyo', value: 'tokyo' },
-  { label: 'Paris', value: 'paris' },
-];
-
 import Animated from 'react-native-reanimated';
 import { GlassCard } from '../../../design/components/GlassCard';
 
@@ -72,17 +67,36 @@ export const RegisterScreen = ({ navigation }: Props) => {
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
 
-  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterForm>({
+  const { control, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     mode: 'onBlur',
     reValidateMode: 'onBlur',
-    defaultValues: { name: '', email: '', gender: undefined, mobile: '', address: '', city: '', password: '', confirmPassword: '' },
+    defaultValues: { name: '', email: '', gender: undefined, mobile: '', city: '', state: '', address: '', password: '', confirmPassword: '' },
   });
+
+  const cityVal = watch('city');
+  const stateVal = watch('state');
+  const locationDisplay = cityVal && stateVal ? `${cityVal}, ${stateVal}` : cityVal || '';
+
+  /** Called when the user picks a suggestion, or uses their live location */
+  const handleLocationSelect = (loc: LocationValue) => {
+    setValue('city', loc.city || loc.displayName, { shouldValidate: true, shouldDirty: true });
+    setValue('state', loc.state, { shouldDirty: true });
+    // Pre-fill the address line only if the user hasn't typed one yet.
+    if (!watch('address') && loc.displayName) {
+      setValue('address', loc.displayName, { shouldDirty: true });
+    }
+  };
+
+  const handleLocationClear = () => {
+    setValue('city', '', { shouldValidate: true, shouldDirty: true });
+    setValue('state', '', { shouldDirty: true });
+  };
 
   const onSubmit = async (data: RegisterForm) => {
     try {
       const response = await authService.register(
-        data.name, data.email, data.password, data.gender, data.mobile, data.address, data.city
+        data.name, data.email, data.password, data.gender, data.mobile, data.address, data.city, data.state
       );
       await login(response.user, response.token);
     } catch (error: unknown) {
@@ -193,6 +207,15 @@ export const RegisterScreen = ({ navigation }: Props) => {
                   )}
                 />
 
+                {/* Indian address — search suggestions + live location */}
+                <LocationAutocomplete
+                  label="Location (City / Area)"
+                  value={locationDisplay}
+                  onSelect={handleLocationSelect}
+                  onClear={handleLocationClear}
+                  error={errors.city?.message}
+                />
+
                 <Controller
                   control={control}
                   name="address"
@@ -204,26 +227,12 @@ export const RegisterScreen = ({ navigation }: Props) => {
                       onBlur={onBlur}
                       onChangeText={onChange}
                       error={errors.address?.message}
+                      placeholder="House / Street / Landmark"
                       returnKeyType="next"
                       onSubmitEditing={() => passwordRef.current?.focus()}
                       blurOnSubmit={false}
                       textContentType="fullStreetAddress"
                       autoComplete="street-address"
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="city"
-                  render={({ field: { onChange, value } }) => (
-                    <SelectionField
-                      variant="dropdown"
-                      label="City"
-                      options={cityOptions}
-                      value={value}
-                      onChange={onChange}
-                      error={errors.city?.message}
                     />
                   )}
                 />

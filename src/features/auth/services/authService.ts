@@ -49,13 +49,14 @@ export const authService = {
   },
 
   register: async (
-    name: string, 
-    email: string, 
-    password: string, 
-    gender: string, 
-    mobile: string, 
-    address: string, 
-    city: string
+    name: string,
+    email: string,
+    password: string,
+    gender: string,
+    mobile: string,
+    address: string,
+    city: string,
+    state?: string
   ): Promise<{ user: User; token: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     const accounts = await storage.getItem<Record<string, StoredAccount>>(REGISTERED_USERS_KEY) || {};
@@ -72,6 +73,7 @@ export const authService = {
       mobile,
       address,
       city,
+      state,
     };
 
     accounts[cleanEmail] = {

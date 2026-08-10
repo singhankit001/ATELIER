@@ -11,8 +11,11 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import { MapPin, X, Search, ChevronRight } from 'lucide-react-native';
+import * as Location from 'expo-location';
+import { MapPin, X, Search, ChevronRight, LocateFixed } from 'lucide-react-native';
+import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useAppTheme } from '../../core/theme/ThemeProvider';
+import { useIlluminatedPress } from '../../experience/interactions/useIlluminatedPress';
 import { Typography } from './Typography';
 
 // ---------------------------------------------------------------------------
@@ -105,6 +108,104 @@ async function searchIndia(query: string): Promise<LocationSuggestion[]> {
   return data;
 }
 
+/**
+ * Reverse-geocodes device coordinates into a LocationSuggestion, and
+ * enforces the same India-only constraint as the text search above.
+ */
+async function reverseGeocodeIndia(latitude: number, longitude: number): Promise<LocationSuggestion> {
+  const url =
+    `https://nominatim.openstreetmap.org/reverse` +
+    `?format=json&addressdetails=1&zoom=16` +
+    `&lat=${latitude}&lon=${longitude}`;
+
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'PremiumGalleryApp/1.0',
+      'Accept-Language': 'en-IN,en;q=0.9',
+    },
+  });
+
+  if (!res.ok) throw new Error(`Nominatim ${res.status}`);
+  const data = await res.json();
+
+  if (!data || data.error) {
+    throw new Error('Could not determine your address from this location.');
+  }
+  if (data.address?.country_code !== 'in') {
+    throw new Error('ATELIER currently supports Indian addresses. Please search manually instead.');
+  }
+
+  return {
+    place_id: data.place_id,
+    display_name: data.display_name,
+    address: data.address,
+    lat: String(latitude),
+    lon: String(longitude),
+  };
+}
+
+/**
+ * Requests permission, reads the device's current position, and reverse
+ * geocodes it. Throws human-readable errors — permission denial is never
+ * a crash, and the caller can always fall back to manual search.
+ */
+async function getCurrentLocationSuggestion(): Promise<LocationSuggestion> {
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  if (status !== 'granted') {
+    throw new Error('Location permission is required to automatically detect your address.');
+  }
+
+  const position = await Location.getCurrentPositionAsync({
+    accuracy: Location.Accuracy.Balanced,
+  });
+
+  return reverseGeocodeIndia(position.coords.latitude, position.coords.longitude);
+}
+
+// ---------------------------------------------------------------------------
+// "Use my current location" — premium glass control with press+glow
+// ---------------------------------------------------------------------------
+
+const CurrentLocationButton = ({ onPress, locating }: { onPress: () => void; locating: boolean }) => {
+  const { theme } = useAppTheme();
+  const { animatedStyle, glowStyle, onPressIn, onPressOut } = useIlluminatedPress(0.97);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      disabled={locating}
+      accessibilityRole="button"
+      accessibilityLabel="Use my current location"
+      accessibilityState={{ disabled: locating, busy: locating }}
+      style={styles.currentLocationWrap}
+    >
+      <Animated.View
+        style={[
+          styles.currentLocationRow,
+          {
+            backgroundColor: theme.colors.surfaceGlass02 ?? theme.colors.surfaceGlass,
+            borderColor: theme.colors.accent,
+            shadowColor: theme.colors.accent,
+          },
+          animatedStyle,
+        ]}
+      >
+        <Animated.View pointerEvents="none" style={[styles.currentLocationGlow, { backgroundColor: theme.colors.accent }, glowStyle]} />
+        {locating ? (
+          <ActivityIndicator size="small" color={theme.colors.accent} />
+        ) : (
+          <LocateFixed size={17} color={theme.colors.accent} />
+        )}
+        <Typography variant="body" weight="medium" color={theme.colors.accent} style={{ marginLeft: 10 }}>
+          {locating ? 'Locating…' : 'Use my current location'}
+        </Typography>
+      </Animated.View>
+    </Pressable>
+  );
+};
+
 // ---------------------------------------------------------------------------
 // Search Modal — rendered in a full-screen Modal so dropdown is never clipped
 // ---------------------------------------------------------------------------
@@ -132,6 +233,8 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, onSelect })
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>(POPULAR_INDIAN_CITIES);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
 
   const fetch_ = useCallback((text: string) => {
@@ -160,8 +263,24 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, onSelect })
     setQuery('');
     setSuggestions(POPULAR_INDIAN_CITIES);
     setSearched(false);
+    setLocateError(null);
     onClose();
   };
+
+  const handleUseCurrentLocation = useCallback(async () => {
+    if (locating) return;
+    setLocateError(null);
+    setLocating(true);
+    try {
+      const suggestion = await getCurrentLocationSuggestion();
+      onSelect(suggestion);
+      handleClose();
+    } catch (error) {
+      setLocateError(error instanceof Error ? error.message : 'Unable to fetch your current location.');
+    } finally {
+      setLocating(false);
+    }
+  }, [locating, onSelect]);
 
   return (
     <Modal
@@ -214,6 +333,18 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, onSelect })
             <ActivityIndicator size="small" color={theme.colors.accent} style={{ marginLeft: 6 }} />
           )}
         </View>
+
+        {/* Use my current location */}
+        <CurrentLocationButton onPress={handleUseCurrentLocation} locating={locating} />
+        {locateError ? (
+          <Typography
+            variant="label"
+            color={theme.colors.error}
+            style={styles.locateError}
+          >
+            {locateError}
+          </Typography>
+        ) : null}
 
         {!query.trim() && (
           <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 }}>
@@ -425,6 +556,32 @@ const styles = StyleSheet.create({
   widgetError: {
     marginTop: 4,
     marginLeft: 4,
+  },
+
+  // "Use my current location" button
+  currentLocationWrap: {
+    marginHorizontal: 16,
+    marginBottom: 4,
+  },
+  currentLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderRadius: 12,
+    height: 48,
+    overflow: 'hidden',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  currentLocationGlow: {
+    ...StyleSheet.absoluteFill,
+    opacity: 0,
+  },
+  locateError: {
+    marginHorizontal: 20,
+    marginTop: 8,
   },
 
   // Modal styles
