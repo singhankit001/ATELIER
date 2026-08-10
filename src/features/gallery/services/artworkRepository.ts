@@ -19,7 +19,9 @@ export const artworkRepository = {
    * this SDK version.
    */
   async downloadAndSaveImage(url: string, id: string, onProgress?: (progress: number) => void): Promise<void> {
-    const { status } = await MediaLibrary.requestPermissionsAsync();
+    // Write-only — this feature only ever saves a new asset, it never
+    // reads the user's existing library, so it never needs full access.
+    const { status } = await MediaLibrary.requestPermissionsAsync(true);
 
     if (status !== 'granted') {
       throw new ArtworkError('Gallery permissions are required to save images.', 'PERMISSION_DENIED');

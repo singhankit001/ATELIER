@@ -29,6 +29,23 @@
         {
           "locationWhenInUsePermission": "ATELIER uses your location to suggest your current address in India."
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": false,
+          "savePhotosPermission": "ATELIER saves artwork to your photo library only when you tap Save.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#08070A"
+        }
       ]
     ],
     "extra": {

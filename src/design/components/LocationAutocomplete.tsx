@@ -144,10 +144,16 @@ async function reverseGeocodeIndia(latitude: number, longitude: number): Promise
   };
 }
 
+const GPS_TIMEOUT_MS = 15000;
+
 /**
  * Requests permission, reads the device's current position, and reverse
  * geocodes it. Throws human-readable errors — permission denial is never
  * a crash, and the caller can always fall back to manual search.
+ *
+ * `getCurrentPositionAsync` has no built-in timeout — indoors, or on a
+ * simulator with no location fixture configured, it can hang indefinitely.
+ * Racing it against a timeout means "Locating…" can never spin forever.
  */
 async function getCurrentLocationSuggestion(): Promise<LocationSuggestion> {
   const { status } = await Location.requestForegroundPermissionsAsync();
@@ -155,9 +161,12 @@ async function getCurrentLocationSuggestion(): Promise<LocationSuggestion> {
     throw new Error('Location permission is required to automatically detect your address.');
   }
 
-  const position = await Location.getCurrentPositionAsync({
-    accuracy: Location.Accuracy.Balanced,
-  });
+  const position = await Promise.race([
+    Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Could not get your location in time. Please try again or search manually.')), GPS_TIMEOUT_MS)
+    ),
+  ]);
 
   return reverseGeocodeIndia(position.coords.latitude, position.coords.longitude);
 }
