@@ -27,6 +27,15 @@ export const ProfileScreen = () => {
   const membershipBg = `rgba(${glowR}, ${glowG}, ${glowB}, ${theme.glow.primary.low})`;
   const membershipBorder = `rgba(${glowR}, ${glowG}, ${glowB}, ${theme.glow.primary.medium})`;
 
+  // A raw internal id — a guest session's `guest-<epoch-timestamp>`, or a
+  // freshly registered account's `Date.now().toString()` — is not a
+  // presentable "membership number"; it's long enough to wrap the pill
+  // onto a second line, breaking its rounded-pill shape entirely (see the
+  // reported screenshot). Derive a short, stable, human-presentable
+  // number instead. numberOfLines/ellipsizeMode below is the structural
+  // backstop regardless of id shape.
+  const patronNumber = (user?.id || '89201').replace(/\D/g, '').slice(-6).padStart(6, '0');
+
   const personalInfo = [
     user?.mobile && { label: 'Mobile', value: user.mobile },
     user?.gender && { label: 'Gender', value: user.gender.charAt(0).toUpperCase() + user.gender.slice(1) },
@@ -60,8 +69,15 @@ export const ProfileScreen = () => {
           <GlassCard style={styles.profileCard}>
             <View style={[styles.membershipHeader, { backgroundColor: membershipBg, borderColor: membershipBorder }]}>
               <Award size={16} color={theme.colors.accent} />
-              <Typography variant="caption" weight="bold" color={theme.colors.accent} style={{ marginLeft: 6, letterSpacing: 1.2 }}>
-                PATRON MEMBERSHIP • NO. {user?.id || '89201'}
+              <Typography
+                variant="caption"
+                weight="bold"
+                color={theme.colors.accent}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={{ marginLeft: 6, letterSpacing: 1.2, flexShrink: 1 }}
+              >
+                PATRON MEMBERSHIP • NO. {patronNumber}
               </Typography>
             </View>
 
