@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { storage } from '../storage/storage';
+import { resolveApiErrorMessage } from './apiErrorMessage';
 
 const API_BASE_URL = 'https://api.example.com'; // We will use a mock service for now
 
@@ -32,12 +33,13 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const config = error.config;
-    
+    const isNetworkFailure = !error.response;
+
     // Network detection / timeout handling
-    if (!error.response) {
+    if (isNetworkFailure) {
       console.warn('Network Error or Timeout. Attempting retry...');
       config.__retryCount = config.__retryCount || 0;
-      
+
       if (config.__retryCount < 3) {
         config.__retryCount += 1;
         // Exponential backoff
@@ -50,11 +52,9 @@ apiClient.interceptors.response.use(
       // Global handling for 401 Unauthorized
       console.error('Unauthorized response. Consider clearing session.');
     }
-    
-    // Parse error for UI consumption safely without exposing sensitive backend details
-    const sanitizedError = new Error(
-      error.response?.data?.message || 'An unexpected error occurred. Please try again.'
-    );
+
+    // Parse error for UI consumption safely without exposing sensitive backend details.
+    const sanitizedError = new Error(resolveApiErrorMessage(isNetworkFailure, error.response?.data?.message));
     return Promise.reject(sanitizedError);
   }
 );

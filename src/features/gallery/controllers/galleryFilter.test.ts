@@ -86,17 +86,25 @@ describe('filterImages', () => {
 });
 
 describe('getNextGalleryPageParam', () => {
-  it('returns the next page number when the last page is full', () => {
+  // Gallery is deliberately capped at page 1 (50 images) — an explicit
+  // product decision, not infinite scroll. These lock in that the
+  // function never advances past page 1, regardless of input shape.
+  it('returns undefined even when the last page is completely full', () => {
     const fullPage = [makeImage('1', 'A'), makeImage('2', 'B')];
-    expect(getNextGalleryPageParam(fullPage, [fullPage], 2)).toBe(2);
+    expect(getNextGalleryPageParam(fullPage, [fullPage], 2)).toBeUndefined();
   });
 
-  it('returns undefined when the last page is short (end of feed)', () => {
+  it('returns undefined when the last page is short', () => {
     const shortPage = [makeImage('1', 'A')];
     expect(getNextGalleryPageParam(shortPage, [shortPage], 2)).toBeUndefined();
   });
 
   it('returns undefined for an empty last page', () => {
     expect(getNextGalleryPageParam([], [[]], 50)).toBeUndefined();
+  });
+
+  it('returns undefined at real gallery scale (a full 50-image page)', () => {
+    const fullPage = Array.from({ length: 50 }, (_, i) => makeImage(String(i), 'Author'));
+    expect(getNextGalleryPageParam(fullPage, [fullPage], 50)).toBeUndefined();
   });
 });

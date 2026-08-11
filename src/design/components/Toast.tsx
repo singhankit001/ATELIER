@@ -10,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { theme } from '../../core/theme/theme';
 import { Typography } from './Typography';
-import { Info } from 'lucide-react-native';
+import { Info, AlertCircle, CheckCircle2 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 
@@ -68,24 +68,28 @@ export const Toast = () => {
 
   if (!message) return null;
 
+  // `bg` doubles as the accent color (left border stripe + progress bar +
+  // icon), not the whole toast background — otherwise this and the
+  // hardcoded Info icon below meant an error toast and a success toast
+  // were visually near-identical apart from a 3px sliver at the bottom.
   const getColors = () => {
-    if (type === 'error') return { bg: theme.colors.error, text: theme.colors.surface };
-    if (type === 'success') return { bg: theme.colors.success, text: theme.colors.surface };
-    return { bg: theme.colors.primary, text: theme.colors.surface };
+    if (type === 'error') return { bg: theme.colors.error, Icon: AlertCircle };
+    if (type === 'success') return { bg: theme.colors.success, Icon: CheckCircle2 };
+    return { bg: theme.colors.primary, Icon: Info };
   };
 
-  const colors = getColors();
+  const { bg: accentColor, Icon } = getColors();
 
   return (
     <View style={styles.wrapper} pointerEvents="none">
-      <Animated.View style={[styles.container, containerStyle]}>
+      <Animated.View style={[styles.container, containerStyle, { borderLeftColor: accentColor }]}>
         <View style={styles.content}>
-          <Info color={theme.colors.textPrimary} size={20} />
+          <Icon color={accentColor} size={20} />
           <Typography variant="body" color={theme.colors.textPrimary} style={styles.message}>
             {message}
           </Typography>
         </View>
-        <Animated.View style={[styles.progressBar, progressStyle, { backgroundColor: colors.bg }]} />
+        <Animated.View style={[styles.progressBar, progressStyle, { backgroundColor: accentColor }]} />
       </Animated.View>
     </View>
   );
@@ -105,6 +109,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadii.lg,
     borderWidth: 1,
     borderColor: theme.colors.borderGlass,
+    borderLeftWidth: 3,
     overflow: 'hidden',
     ...theme.elevation.modal,
   },

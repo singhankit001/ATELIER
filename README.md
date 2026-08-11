@@ -217,14 +217,14 @@ eas build --platform android --profile preview
 
 This requires an Expo/EAS account (free tier is sufficient) and runs on Expo's cloud build infrastructure — no local Android SDK needed. `app.json`'s Android manifest is scoped to exactly what the app uses: `ACCESS_COARSE_LOCATION`/`ACCESS_FINE_LOCATION` (GPS on the registration form) and the media-save permission set required by `expo-media-library` for the download feature — no photo-library *read* permission is requested, since the app never picks from or browses the device's existing library.
 
-**A real build was run and finished successfully** (EAS build `896699bb-d33d-43a8-bacc-e1f693d82239`, SDK 57, `versionCode` 1, ~17.5 min build time — this is the current build, containing every fix from this hardening pass, including the theme-persistence fix described in [Persistence](#persistence)):
+**A real build was run and finished successfully** (EAS build `d575793e-aee1-455b-bbff-2e6c54d4321a`, SDK 57, `versionCode` 1, ~21 min build time — this is the current build, containing every fix from this hardening pass, including the **download bug fix** described in [Image Download](#image-download) and the theme-persistence fix described in [Persistence](#persistence)):
 
-- Install page / QR code: https://expo.dev/accounts/singhankit001/projects/premium-gallery-app/builds/896699bb-d33d-43a8-bacc-e1f693d82239
-- Direct `.apk` artifact: https://expo.dev/artifacts/eas/PLJXluV_pV-2V5-NeFtW_Hh376YfMvcIa_ji7qu4mKs.apk
+- Install page / QR code: https://expo.dev/accounts/singhankit001/projects/premium-gallery-app/builds/d575793e-aee1-455b-bbff-2e6c54d4321a
+- Direct `.apk` artifact: https://expo.dev/artifacts/eas/8I-Fm4ZaD9IvYnZisSjkfzzO-L2HAZD_RtJQj4a9sgI.apk
 
 Scan the QR on the install page from an Android device, or download the `.apk` directly and sideload it (enable "install from unknown sources" if prompted). See `DEVICE_QA_CHECKLIST.md` for a step-by-step manual test script to run against this exact build.
 
-An earlier build (`1563a22a-4c39-4b88-ad57-6f47fbe49fd9`) also finished successfully during an earlier pass but predates the fixes above — use the build linked here, not that one.
+Two earlier builds (`1563a22a-4c39-4b88-ad57-6f47fbe49fd9`, `896699bb-d33d-43a8-bacc-e1f693d82239`) also finished successfully during earlier passes but predate the download fix above — use the build linked here, not those.
 
 ## Assumptions
 

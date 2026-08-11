@@ -52,12 +52,22 @@ export const filterImages = (
   return result;
 };
 
-/** Mirrors the getNextPageParam logic used by useInfiniteQuery, as a pure function for testing. */
+/**
+ * Mirrors the getNextPageParam logic used by useInfiniteQuery, as a pure
+ * function for testing.
+ *
+ * Deliberately capped at page 1 (50 images, matching
+ * https://picsum.photos/v2/list?page=1&limit=50 exactly) — this is an
+ * explicit product decision, not an oversight: the gallery never fetches
+ * page 2+, regardless of how full the last page was. Kept as a real
+ * function (not inlined as `() => undefined` at the call site) so the
+ * policy has one canonical, tested home, the same as every other gallery
+ * rule in this file.
+ */
 export const getNextGalleryPageParam = (
-  lastPage: ImageItem[],
-  allPages: ImageItem[][],
-  pageSize: number
+  _lastPage: ImageItem[],
+  _allPages: ImageItem[][],
+  _pageSize: number
 ): number | undefined => {
-  if (lastPage.length < pageSize) return undefined;
-  return allPages.length + 1;
+  return undefined;
 };
