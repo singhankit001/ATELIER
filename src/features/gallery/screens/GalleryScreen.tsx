@@ -1,21 +1,22 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { ErrorBoundary } from '../../../core/error/ErrorBoundary';
 import { ImageItem } from '../services/galleryService';
 import { Typography } from '../../../design/components/Typography';
 import { ArtworkViewer } from '../components/ArtworkViewer';
-import { useFavoritesStore } from '../../favorites/store/useFavoritesStore';
 import { GalleryItem } from '../components/GalleryItem';
 import { SceneProvider } from '../../../experience/scene/SceneProvider';
 import { useGalleryController, GalleryFilter } from '../controllers/useGalleryController';
 import { FloatingSearch, FilterValue } from '../components/FloatingSearch';
 import { FloatingActionButton } from '../components/FloatingActionButton';
-import { SkeletonCard } from '../components/SkeletonCard';
+import { SkeletonGrid } from '../components/SkeletonCard';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
+import { useAppTheme } from '../../../core/theme/ThemeProvider';
 
 export const GalleryScreen = () => {
+  const { theme } = useAppTheme();
   const {
     images,
     search,
@@ -28,8 +29,9 @@ export const GalleryScreen = () => {
     refetch,
     isRefetching,
     isEmpty,
-    handleRefresh,
     loadMore,
+    isLoadingMore,
+    hasMore,
   } = useGalleryController();
 
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
@@ -48,13 +50,8 @@ export const GalleryScreen = () => {
   }, []);
 
   const renderItem = useCallback(({ item, index }: { item: ImageItem; index: number }) => (
-    <GalleryItem
-      item={item}
-      index={index}
-      scrollY={scrollY}
-      onPress={setSelectedImage}
-    />
-  ), [scrollY]);
+    <GalleryItem item={item} index={index} onPress={setSelectedImage} />
+  ), []);
 
   return (
     <ErrorBoundary name="GalleryScreen">
@@ -70,34 +67,48 @@ export const GalleryScreen = () => {
               filter={filter as FilterValue}
               onFilterChange={(val) => setFilter(val as GalleryFilter)}
             />
+
+            {!isLoading && !isError && (
+              <Typography variant="caption" color={theme.colors.textTertiary} style={styles.countLabel}>
+                {images.length}{hasMore ? '+' : ''} {images.length === 1 ? 'image' : 'images'}
+              </Typography>
+            )}
           </View>
 
           {isError && !isLoading ? (
             <ErrorState error={error} onRetry={refetch} />
+          ) : isLoading ? (
+            <View style={styles.loadingContent}>
+              <SkeletonGrid />
+            </View>
           ) : (
             <Animated.FlatList
               ref={flatListRef}
-              data={isLoading ? [] : images}
+              data={images}
               keyExtractor={(item) => item.id}
+              numColumns={2}
+              columnWrapperStyle={styles.row}
               onScroll={scrollHandler}
               scrollEventThrottle={16}
-              initialNumToRender={4}
-              maxToRenderPerBatch={4}
-              windowSize={5}
-              removeClippedSubviews={true}
-              renderItem={renderItem}
+              initialNumToRender={8}
+              maxToRenderPerBatch={6}
+              windowSize={7}
+              removeClippedSubviews
               contentContainerStyle={styles.listContent}
+              renderItem={renderItem}
               refreshing={isRefetching}
-              onRefresh={handleRefresh}
+              onRefresh={refetch}
               onEndReached={loadMore}
-              onEndReachedThreshold={0.4}
-              ListEmptyComponent={
-                isLoading ? (
-                  <View style={{ marginTop: 32 }}>
-                    <SkeletonCard />
-                    <SkeletonCard />
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                isLoadingMore ? (
+                  <View style={styles.footerLoading}>
+                    <ActivityIndicator color={theme.colors.accent} />
                   </View>
-                ) : isEmpty ? (
+                ) : null
+              }
+              ListEmptyComponent={
+                isEmpty ? (
                   <EmptyState
                     title="No Artworks Found"
                     message="We couldn't find any artworks matching your search criteria."
@@ -134,8 +145,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     zIndex: 10,
   },
+  countLabel: {
+    marginTop: 8,
+  },
+  loadingContent: {
+    flex: 1,
+    marginTop: 16,
+  },
   listContent: {
+    paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 150,
+  },
+  row: {
+    justifyContent: 'space-between',
+  },
+  footerLoading: {
+    paddingVertical: 24,
   },
 });

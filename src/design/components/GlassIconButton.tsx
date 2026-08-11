@@ -2,7 +2,8 @@ import React from 'react';
 import { StyleSheet, ActivityIndicator } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { runOnJS } from 'react-native-reanimated';
+import Animated, { runOnJS, ZoomIn } from 'react-native-reanimated';
+import { CheckCircle2 } from 'lucide-react-native';
 import { useIlluminatedPress } from '../../experience/interactions/useIlluminatedPress';
 import { useAppTheme } from '../../core/theme/ThemeProvider';
 
@@ -13,6 +14,8 @@ export interface GlassIconButtonProps {
   color?: string;
   fill?: string;
   loading?: boolean;
+  /** Briefly shows a checkmark in place of the icon — e.g. "Download → Saving… → Saved". */
+  success?: boolean;
   disabled?: boolean;
   tint?: 'light' | 'dark';
 }
@@ -31,6 +34,7 @@ export const GlassIconButton = ({
   color,
   fill = 'none',
   loading = false,
+  success = false,
   disabled = false,
   tint = 'dark',
 }: GlassIconButtonProps) => {
@@ -68,6 +72,10 @@ export const GlassIconButton = ({
         <Animated.View pointerEvents="none" style={[styles.glow, { backgroundColor: theme.colors.accent }, glowStyle]} />
         {loading ? (
           <ActivityIndicator color={resolvedColor} size="small" />
+        ) : success ? (
+          <Animated.View entering={ZoomIn.duration(theme.motion.durations.fast)}>
+            <CheckCircle2 color={theme.colors.success} size={22} />
+          </Animated.View>
         ) : (
           <Icon color={resolvedColor} fill={fill} size={22} />
         )}

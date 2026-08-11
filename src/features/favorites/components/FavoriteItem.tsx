@@ -1,115 +1,90 @@
 import React from 'react';
-import { StyleSheet, Pressable, View } from 'react-native';
-import Animated, { FadeInDown, FadeOutDown, Layout } from 'react-native-reanimated';
+import { StyleSheet, View } from 'react-native';
+import Animated, { FadeOutDown, Layout, useReducedMotion } from 'react-native-reanimated';
 import { Image } from 'expo-image';
-import { HeartOff } from 'lucide-react-native';
-import { BlurView } from 'expo-blur';
 import { ImageItem } from '../../gallery/services/galleryService';
-import { theme } from '../../../core/theme/theme';
+import { useAppTheme } from '../../../core/theme/ThemeProvider';
 import { Typography } from '../../../design/components/Typography';
-import { usePressEffect } from '../../../experience/interactions/usePressEffect';
+import { AnimatedGlassCard } from '../../../design/components/AnimatedGlassCard';
+import { AnimatedFavoriteButton } from '../../../design/components/AnimatedFavoriteButton';
+import { useStaggerEntrance } from '../../../experience/interactions/useStaggerEntrance';
+import { GRID_CARD_WIDTH } from '../../gallery/components/GalleryItem';
+
+const CARD_HEIGHT = GRID_CARD_WIDTH * 1.3;
 
 interface FavoriteItemProps {
   item: ImageItem;
   index: number;
-  width: number;
   onPress: (item: ImageItem) => void;
   onRemove: (item: ImageItem) => void;
 }
 
-export const FavoriteItem = React.memo(({ item, index, width, onPress, onRemove }: FavoriteItemProps) => {
-  const { animatedStyle: pressStyle, onPressIn, onPressOut } = usePressEffect(0.96);
+/**
+ * FavoriteItem — the same AnimatedGlassCard/AnimatedFavoriteButton
+ * primitives as GalleryItem, at the exact same card footprint, so the two
+ * grids feel like one coherent system rather than two bespoke ones.
+ */
+export const FavoriteItem = React.memo(({ item, index, onPress, onRemove }: FavoriteItemProps) => {
+  const { theme } = useAppTheme();
+  const reducedMotion = useReducedMotion();
+  const entering = useStaggerEntrance(index);
 
   return (
-    <Animated.View 
-      layout={Layout.springify().damping(16).stiffness(150)}
-      entering={FadeInDown.delay(index * 50).duration(400)}
-      exiting={FadeOutDown.duration(300)}
-      style={[styles.container, { width, height: width * 1.5 }]}
+    <Animated.View
+      layout={reducedMotion ? undefined : Layout.springify().damping(20).stiffness(200)}
+      entering={entering}
+      exiting={FadeOutDown.duration(theme.motion.durations.normal)}
+      style={styles.wrapper}
     >
-      <Animated.View style={[styles.innerContainer, pressStyle]}>
-        <Pressable 
-          onPress={() => onPress(item)}
-          onPressIn={onPressIn}
-          onPressOut={onPressOut}
-          style={styles.pressableArea}
-          accessibilityRole="imagebutton"
-          accessibilityLabel={`Favorite artwork by ${item.author}`}
-        >
-          <Image
-            source={item.thumbnailUrl} // using thumbnail for the grid is optimal
-            style={styles.image}
-            contentFit="cover"
-            transition={300}
-            cachePolicy="memory-disk"
-          />
+      <AnimatedGlassCard
+        onPress={() => onPress(item)}
+        style={styles.card}
+        accessibilityLabel={`Favorite artwork by ${item.author}`}
+        accessibilityRole="imagebutton"
+      >
+        <Image
+          source={item.thumbnailUrl}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          transition={300}
+          cachePolicy="memory-disk"
+        />
+        <View style={styles.favoriteWrap}>
+          <AnimatedFavoriteButton isFavorite onToggle={() => onRemove(item)} />
+        </View>
+      </AnimatedGlassCard>
 
-          <View style={styles.overlayBottom}>
-            <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-            <View style={styles.infoContainer}>
-              <Typography 
-                variant="caption" 
-                weight="bold" 
-                color={theme.colors.primary} 
-                numberOfLines={1}
-                style={{ flex: 1, marginRight: theme.spacing.sm }}
-              >
-                {item.author}
-              </Typography>
-
-              <Pressable 
-                onPress={(e) => {
-                  e.stopPropagation();
-                  onRemove(item);
-                }}
-                style={styles.removeButton}
-                accessibilityRole="button"
-                accessibilityLabel="Remove from favorites"
-                hitSlop={12}
-              >
-                <HeartOff size={16} color={theme.colors.textSecondary} />
-              </Pressable>
-            </View>
-          </View>
-        </Pressable>
-      </Animated.View>
+      <View style={styles.caption}>
+        <Typography variant="caption" weight="bold" numberOfLines={1}>
+          {item.author}
+        </Typography>
+        <Typography variant="micro" color={theme.colors.textTertiary}>
+          ID: {item.id}
+        </Typography>
+      </View>
     </Animated.View>
   );
-}, (prev, next) => prev.item.id === next.item.id && prev.width === next.width);
+}, (prev, next) => prev.item.id === next.item.id);
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: theme.spacing.md,
+  wrapper: {
+    width: GRID_CARD_WIDTH,
+    marginBottom: 16,
   },
-  innerContainer: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: theme.borderRadii.lg,
-    overflow: 'hidden',
-    ...theme.elevation.card,
+  card: {
+    width: GRID_CARD_WIDTH,
+    height: CARD_HEIGHT,
   },
-  pressableArea: {
-    flex: 1,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  overlayBottom: {
+  favoriteWrap: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: theme.spacing.sm,
+    bottom: 8,
+    right: 8,
+    borderRadius: 22,
     overflow: 'hidden',
+    backgroundColor: 'rgba(0,0,0,0.28)',
   },
-  infoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  caption: {
+    marginTop: 8,
+    paddingHorizontal: 2,
   },
-  removeButton: {
-    padding: theme.spacing.xs,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: theme.borderRadii.full,
-  }
 });

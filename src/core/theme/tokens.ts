@@ -152,27 +152,47 @@ export const borderRadii = {
   full: 9999,
 };
 
-// Spring configurations for Motion Layer
+// Spring configurations for Motion Layer — the animated glassmorphism
+// system's physical "feel". Named by what they're for, not by vibe words,
+// so a card press and a favorite pop don't accidentally drift apart just
+// because someone tuned one and not the other.
 export const springs = {
+  press: { damping: 18, stiffness: 260, mass: 0.7 },     // buttons, cards — fast, physical
+  card: { damping: 22, stiffness: 180, mass: 0.9 },       // card settle/entry
+  favorite: { damping: 12, stiffness: 260, mass: 0.6 },   // heart pop — bouncier, more delight
+  navigation: { damping: 26, stiffness: 200, mass: 1 },   // screen transitions — settled, no overshoot
   gentle: { damping: 22, stiffness: 120, mass: 1 },
   bouncy: { damping: 14, stiffness: 160, mass: 0.9 },
-  slow: { damping: 32, stiffness: 60, mass: 1.4 },
-  cinematic: { damping: 38, stiffness: 70, mass: 1.8 },
-  dock: { damping: 24, stiffness: 180, mass: 0.8 },
+  dock: { damping: 24, stiffness: 180, mass: 0.8 },       // tab bar active-pill slide
 };
 
-// Semantic Motion presets
+// Semantic Motion presets — durations for feedback, not spectacle.
+// Basic interaction (press, focus, toggle) stays in the 120-300ms band;
+// nothing in the animated-glassmorphism system should run longer than
+// ~500ms outside of the ambient glow breathe (which is deliberately slow).
 export const motion = {
   durations: {
-    fast: 150,
-    medium: 250,
-    base: 350,
-    slow: 550,
-    cinematic: 1200,
+    fast: 120,
+    normal: 200,
+    medium: 300,
+    slow: 500,
+    glowBreathe: 3200, // one direction of the ambient glow's breathing cycle
   },
   presets: {
-    screenEnter: { spring: springs.cinematic, delay: 0 },
-    cardPress: { spring: springs.gentle, scale: 0.96 },
-    portalTransition: { duration: 1200 },
+    screenEnter: { spring: { damping: 26, stiffness: 200, mass: 1 } }, // == springs.navigation
+    cardPress: { spring: { damping: 18, stiffness: 260, mass: 0.7 }, scale: 0.97 }, // == springs.press
   }
+};
+
+// Glow tokens — animated ambient/interaction glow reads its color from
+// here, never from an arbitrary inline rgba(). `low/medium/high` are
+// opacity levels the same glow animates between (e.g. breathing idle vs.
+// pressed), not different colors. `rgb` is precomputed so worklets can
+// build an animated `rgba(r,g,b,alpha)` string without parsing hex at
+// runtime on the UI thread.
+export const glow = {
+  primary: { color: palette.bronze, rgb: [184, 134, 11] as const, low: 0.12, medium: 0.24, high: 0.4 },
+  secondary: { color: palette.champagneGold, rgb: [245, 230, 204] as const, low: 0.1, medium: 0.2, high: 0.35 },
+  success: { color: palette.deepOlive, rgb: [85, 107, 47] as const, low: 0.12, medium: 0.24, high: 0.4 },
+  error: { color: palette.mutedTerracotta, rgb: [201, 122, 110] as const, low: 0.12, medium: 0.24, high: 0.4 },
 };

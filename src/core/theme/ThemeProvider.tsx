@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import { useThemeStore } from './useThemeStore';
-import { lightColors, darkColors, spacing, typography, elevation, borderRadii, springs, motion, glassLevels } from './tokens';
+import { lightColors, darkColors, spacing, typography, elevation, borderRadii, springs, motion, glassLevels, glow } from './tokens';
 import { Theme } from './theme';
 
 interface ThemeContextType {
@@ -29,6 +29,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     springs,
     motion,
     glassLevels,
+    glow,
   }), [isDark]);
 
   return (

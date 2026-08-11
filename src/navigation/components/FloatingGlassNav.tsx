@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import Animated, { 
-  useAnimatedStyle, 
-  withSpring, 
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  useReducedMotion,
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Compass, Heart, User } from 'lucide-react-native';
@@ -12,9 +15,45 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
+interface TabIconProps {
+  icon: React.ComponentType<{ color?: string; size?: number; fill?: string }>;
+  focused: boolean;
+  color: string;
+  fill?: string;
+}
+
+/** Active tab icon: subtle scale + accent glow. Inactive icons stay quiet. */
+const TabIcon = ({ icon: Icon, focused, color, fill }: TabIconProps) => {
+  const { theme } = useAppTheme();
+  const reducedMotion = useReducedMotion();
+  const scale = useSharedValue(1);
+  const glow = useSharedValue(0);
+
+  useEffect(() => {
+    scale.value = withSpring(focused && !reducedMotion ? 1.1 : 1, theme.springs.press);
+    glow.value = withTiming(focused ? 1 : 0, { duration: theme.motion.durations.normal });
+  }, [focused, reducedMotion]);
+
+  const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glow.value * theme.glow.primary.medium,
+    backgroundColor: theme.glow.primary.color,
+  }));
+
+  return (
+    <View style={styles.iconWrap}>
+      <Animated.View pointerEvents="none" style={[styles.iconGlow, glowStyle]} />
+      <Animated.View style={iconStyle}>
+        <Icon color={color} fill={fill} size={22} />
+      </Animated.View>
+    </View>
+  );
+};
+
 /**
  * FloatingGlassNav
- * Floating glass capsule navigation dock inspired by Apple Vision Pro & Arc Browser.
+ * Floating glass capsule navigation dock — translucent, blurred, with a
+ * spring-sliding active pill and a scale+glow accent on the focused icon.
  */
 export const FloatingGlassNav: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const { theme, isDark } = useAppTheme();
@@ -70,14 +109,13 @@ export const FloatingGlassNav: React.FC<BottomTabBarProps> = ({ state, descripto
               }
             };
 
-            const getIcon = () => {
-              const color = isFocused ? theme.colors.primary : theme.colors.textSecondary;
-              const size = 22;
-              switch (route.name) {
-                case 'Gallery': return <Compass color={color} size={size} />;
-                case 'Favorites': return <Heart color={color} fill={isFocused ? theme.colors.accent : 'transparent'} size={size} />;
-                case 'Profile': return <User color={color} size={size} />;
-                default: return <Compass color={color} size={size} />;
+            const color = isFocused ? theme.colors.primary : theme.colors.textSecondary;
+            const iconFor = (name: string) => {
+              switch (name) {
+                case 'Gallery': return Compass;
+                case 'Favorites': return Heart;
+                case 'Profile': return User;
+                default: return Compass;
               }
             };
 
@@ -90,7 +128,12 @@ export const FloatingGlassNav: React.FC<BottomTabBarProps> = ({ state, descripto
                 accessibilityState={{ selected: isFocused }}
                 accessibilityLabel={route.name}
               >
-                {getIcon()}
+                <TabIcon
+                  icon={iconFor(route.name)}
+                  focused={isFocused}
+                  color={color}
+                  fill={route.name === 'Favorites' && isFocused ? theme.colors.accent : 'transparent'}
+                />
               </Pressable>
             );
           })}
@@ -132,6 +175,17 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconWrap: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconGlow: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 18,
+    opacity: 0,
   },
   activePill: {
     position: 'absolute',

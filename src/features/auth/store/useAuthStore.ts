@@ -36,10 +36,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   setPortalActive: (active: boolean) => set({ isPortalActive: active }),
   
   /**
-   * Auth state updates immediately and unconditionally — the cinematic
+   * Auth state updates immediately and unconditionally — the screen
    * transition (isPortalActive) is a purely visual signal layered on top,
-   * never a gate on authentication itself. See CinematicTransitionOverlay:
-   * it owns clearing isPortalActive once its own animation (or failsafe
+   * never a gate on authentication itself. See AuthTransitionOverlay: it
+   * owns clearing isPortalActive once its own animation (or failsafe
    * timeout) completes, so a stalled animation can never trap the user.
    */
   login: async (user, token) => {

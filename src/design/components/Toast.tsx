@@ -49,7 +49,7 @@ export const Toast = () => {
       // Auto dismiss
       opacity.value = withDelay(
         3000,
-        withTiming(0, { duration: theme.motion.durations.base }, () => {
+        withTiming(0, { duration: theme.motion.durations.normal }, () => {
           runOnJS(hideToast)();
           translateY.value = -100;
         })

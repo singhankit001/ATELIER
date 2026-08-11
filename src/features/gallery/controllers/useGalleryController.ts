@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { galleryService, ImageItem } from '../services/galleryService';
+import { useCallback, useMemo, useState } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { galleryService, ImageItem, PAGE_SIZE } from '../services/galleryService';
 import { useDebounce } from '../../../core/hooks/useDebounce';
 
 export type GalleryFilter = 'ALL' | 'A-M' | 'N-Z';
@@ -8,36 +8,40 @@ export type GalleryFilter = 'ALL' | 'A-M' | 'N-Z';
 export const useGalleryController = () => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<GalleryFilter>('ALL');
-  const [page, setPage] = useState(1);
 
   const debouncedSearch = useDebounce(search, 300);
 
-  const query = useQuery({
-    queryKey: ['gallery', 'official-50'],
-    queryFn: () => galleryService.fetchImages(1, 50),
+  const query = useInfiniteQuery({
+    queryKey: ['gallery', 'infinite', PAGE_SIZE],
+    queryFn: ({ pageParam }) => galleryService.fetchImages(pageParam, PAGE_SIZE),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      // Picsum returning fewer items than requested means we've hit the end.
+      if (lastPage.length < PAGE_SIZE) return undefined;
+      return allPages.length + 1;
+    },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
-  const allImages = query.data || [];
-
-  // Batch display pagination: load 15 initially, increment by 15 on scroll
-  const displayedImages = useMemo(() => {
-    return allImages.slice(0, page * 15);
-  }, [allImages, page]);
-
-  const loadMore = useCallback(() => {
-    if (displayedImages.length < allImages.length) {
-      setPage((prev) => prev + 1);
+  const allImages = useMemo(() => {
+    const pages = query.data?.pages ?? [];
+    const seen = new Set<string>();
+    const flattened: ImageItem[] = [];
+    for (const page of pages) {
+      for (const image of page) {
+        // Defensive de-dupe — protects FlatList's keyExtractor if the API
+        // ever overlaps a page boundary.
+        if (!seen.has(image.id)) {
+          seen.add(image.id);
+          flattened.push(image);
+        }
+      }
     }
-  }, [displayedImages.length, allImages.length]);
-
-  const handleRefresh = useCallback(async () => {
-    setPage(1);
-    await query.refetch();
-  }, [query]);
+    return flattened;
+  }, [query.data]);
 
   const filteredImages = useMemo(() => {
-    let result = displayedImages;
+    let result = allImages;
 
     if (debouncedSearch) {
       const lowerSearch = debouncedSearch.trim().toLowerCase();
@@ -61,7 +65,19 @@ export const useGalleryController = () => {
     }
 
     return result;
-  }, [displayedImages, debouncedSearch, filter]);
+  }, [allImages, debouncedSearch, filter]);
+
+  const isSearchingOrFiltering = debouncedSearch.length > 0 || filter !== 'ALL';
+
+  const loadMore = useCallback(() => {
+    // Pagination only makes sense over the unfiltered feed — while the
+    // user is searching/filtering, "load more" would fetch pages whose
+    // contents they can't even see yet.
+    if (isSearchingOrFiltering) return;
+    if (query.hasNextPage && !query.isFetchingNextPage) {
+      query.fetchNextPage();
+    }
+  }, [isSearchingOrFiltering, query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
 
   return {
     ...query,
@@ -71,7 +87,8 @@ export const useGalleryController = () => {
     setFilter,
     images: filteredImages,
     isEmpty: filteredImages.length === 0 && !query.isLoading,
-    handleRefresh,
     loadMore,
+    isLoadingMore: query.isFetchingNextPage,
+    hasMore: isSearchingOrFiltering ? false : (query.hasNextPage ?? false),
   };
 };

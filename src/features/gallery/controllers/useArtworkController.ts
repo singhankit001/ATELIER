@@ -1,12 +1,20 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { ImageItem } from '../services/galleryService';
 import { artworkRepository, ArtworkError } from '../services/artworkRepository';
 import { useFavoritesStore } from '../../favorites/store/useFavoritesStore';
+
+const SUCCESS_DISPLAY_MS = 1400;
 
 export const useArtworkController = (image: ImageItem | null) => {
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (successTimer.current) clearTimeout(successTimer.current);
+  }, []);
 
   const toggleFavorite = useFavoritesStore(state => state.toggleFavorite);
   const isFavorite = useFavoritesStore(state => state.isFavorite(image?.id || ''));
@@ -31,6 +39,10 @@ export const useArtworkController = (image: ImageItem | null) => {
         (progress) => setDownloadProgress(progress)
       );
       onSuccess();
+      // Download → spinner → checkmark, briefly, before returning to idle.
+      setDownloadSuccess(true);
+      if (successTimer.current) clearTimeout(successTimer.current);
+      successTimer.current = setTimeout(() => setDownloadSuccess(false), SUCCESS_DISPLAY_MS);
     } catch (error) {
       if (error instanceof ArtworkError) {
         onError(error.message);
@@ -49,6 +61,7 @@ export const useArtworkController = (image: ImageItem | null) => {
     handleToggleFavorite,
     isDownloading,
     downloadProgress,
+    downloadSuccess,
     downloadImage,
   };
 };

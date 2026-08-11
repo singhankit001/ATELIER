@@ -4,18 +4,20 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Animated from 'react-native-reanimated';
+import { useStaggerEntrance } from '../../../experience/interactions/useStaggerEntrance';
 
 import { Typography } from '../../../design/components/Typography';
 import { TextField } from '../../../design/components/TextField';
 import { PasswordField } from '../../../design/components/PasswordField';
 import { Button } from '../../../design/components/Button';
 import { Toast, useToastStore } from '../../../design/components/Toast';
+import { GlassCard } from '../../../design/components/GlassCard';
 import { useAppTheme } from '../../../core/theme/ThemeProvider';
 import { theme } from '../../../core/theme/theme';
-import { palette } from '../../../core/theme/tokens';
 import { useAuthStore } from '../store/useAuthStore';
 import { authService } from '../services/authService';
-import { CaveSceneProvider } from '../../../experience/scene/CaveSceneProvider';
+import { SceneProvider } from '../../../experience/scene/SceneProvider';
 import { AuthStackParamList } from '../../../navigation/AuthNavigator';
 import { ErrorBoundary } from '../../../core/error/ErrorBoundary';
 
@@ -30,22 +32,14 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-import Animated from 'react-native-reanimated';
-import { GlassCard } from '../../../design/components/GlassCard';
-
-// The cave environment is a fixed dark cinematic scene, independent of the
-// app's own light/dark theme setting — so its wordmark/tagline draw from
-// the raw palette rather than the reactive theme tokens (which are for
-// content sitting on theme-adaptive surfaces like the glass card below).
-const WORDMARK_COLOR = palette.warmIvory;
-const TAGLINE_COLOR = 'rgba(253, 251, 247, 0.62)';
-
 export const LoginScreen = ({ navigation }: Props) => {
-  const { theme } = useAppTheme();
+  const { theme: activeTheme } = useAppTheme();
   const login = useAuthStore((state) => state.login);
   const showToast = useToastStore((state) => state.showToast);
   const [isLoading, setIsLoading] = useState(false);
   const [isGuestLoading, setIsGuestLoading] = useState(false);
+  const headerEntering = useStaggerEntrance(0);
+  const cardEntering = useStaggerEntrance(2);
 
   const passwordRef = useRef<TextInput>(null);
 
@@ -87,111 +81,103 @@ export const LoginScreen = ({ navigation }: Props) => {
 
   return (
     <ErrorBoundary name="LoginScreen">
-      <CaveSceneProvider>
-        {({ logoStyle, uiStyle }) => (
-          <>
-            <Toast />
-            <KeyboardAvoidingView
-              style={styles.container}
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            >
-              <ScrollView
-                contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps="handled"
+      <SceneProvider showArch>
+        <Toast />
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Animated.View entering={headerEntering} style={styles.logoBlock}>
+              <Typography variant="display" weight="bold" align="center" style={styles.wordmark}>
+                ATELIER
+              </Typography>
+              <Typography
+                variant="body"
+                align="center"
+                color={activeTheme.colors.textSecondary}
+                style={styles.tagline}
               >
-                <Animated.View style={[styles.logoBlock, logoStyle]}>
-                  <Typography
-                    variant="display"
-                    weight="bold"
-                    align="center"
-                    color={WORDMARK_COLOR}
-                    style={styles.wordmark}
-                  >
-                    ATELIER
-                  </Typography>
-                  <Typography
-                    variant="body"
-                    align="center"
-                    color={TAGLINE_COLOR}
-                    style={styles.tagline}
-                  >
-                    Enter the collection
-                  </Typography>
-                </Animated.View>
+                Enter the collection
+              </Typography>
+            </Animated.View>
 
-                <Animated.View style={uiStyle}>
-                  <GlassCard intensity={theme.glassLevels.elevated} style={styles.glassCard}>
-                    <View style={styles.form}>
-                      <Controller
-                        control={control}
-                        name="email"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <TextField
-                            label="Email Address"
-                            value={value}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            error={errors.email?.message}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                            returnKeyType="next"
-                            onSubmitEditing={() => passwordRef.current?.focus()}
-                            blurOnSubmit={false}
-                            textContentType="username"
-                            autoComplete="email"
-                          />
-                        )}
+            <Animated.View entering={cardEntering}>
+              <GlassCard intensity={activeTheme.glassLevels.elevated} style={styles.glassCard}>
+                <View style={styles.form}>
+                  <Controller
+                    control={control}
+                    name="email"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextField
+                        label="Email Address"
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        error={errors.email?.message}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        returnKeyType="next"
+                        onSubmitEditing={() => passwordRef.current?.focus()}
+                        blurOnSubmit={false}
+                        textContentType="username"
+                        autoComplete="email"
                       />
+                    )}
+                  />
 
-                      <Controller
-                        control={control}
-                        name="password"
-                        render={({ field: { onChange, onBlur, value } }) => (
-                          <PasswordField
-                            ref={passwordRef}
-                            label="Password"
-                            value={value}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            error={errors.password?.message}
-                            returnKeyType="done"
-                            onSubmitEditing={handleSubmit(onSubmit)}
-                            textContentType="password"
-                            autoComplete="password"
-                          />
-                        )}
+                  <Controller
+                    control={control}
+                    name="password"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <PasswordField
+                        ref={passwordRef}
+                        label="Password"
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        error={errors.password?.message}
+                        returnKeyType="done"
+                        onSubmitEditing={handleSubmit(onSubmit)}
+                        textContentType="password"
+                        autoComplete="password"
                       />
+                    )}
+                  />
 
-                      <Button
-                        label={isLoading ? 'Entering ATELIER…' : 'Enter ATELIER'}
-                        onPress={handleSubmit(onSubmit)}
-                        disabled={busy}
-                        style={{ marginTop: theme.spacing.xl }}
-                      />
+                  <Button
+                    label="Enter ATELIER"
+                    onPress={handleSubmit(onSubmit)}
+                    loading={isLoading}
+                    disabled={busy}
+                    style={{ marginTop: theme.spacing.xl }}
+                  />
 
-                      <Button
-                        label={isGuestLoading ? 'Entering as guest…' : 'Continue as guest'}
-                        variant="glass"
-                        onPress={handleGuestEntry}
-                        disabled={busy}
-                        style={{ marginTop: theme.spacing.md }}
-                      />
+                  <Button
+                    label="Continue as guest"
+                    variant="glass"
+                    onPress={handleGuestEntry}
+                    loading={isGuestLoading}
+                    disabled={busy}
+                    style={{ marginTop: theme.spacing.md }}
+                  />
 
-                      <Button
-                        label="Don't have an account? Sign Up"
-                        variant="secondary"
-                        onPress={() => navigation.navigate('Register')}
-                        disabled={busy}
-                        style={{ marginTop: theme.spacing.md }}
-                      />
-                    </View>
-                  </GlassCard>
-                </Animated.View>
-              </ScrollView>
-            </KeyboardAvoidingView>
-          </>
-        )}
-      </CaveSceneProvider>
+                  <Button
+                    label="Don't have an account? Sign Up"
+                    variant="secondary"
+                    onPress={() => navigation.navigate('Register')}
+                    disabled={busy}
+                    style={{ marginTop: theme.spacing.md }}
+                  />
+                </View>
+              </GlassCard>
+            </Animated.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SceneProvider>
     </ErrorBoundary>
   );
 };

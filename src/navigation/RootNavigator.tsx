@@ -6,7 +6,7 @@ import { AuthNavigator } from './AuthNavigator';
 import { AppNavigator } from './AppNavigator';
 import { View, ActivityIndicator } from 'react-native';
 import { useAppTheme } from '../core/theme/ThemeProvider';
-import { CinematicTransitionOverlay } from '../experience/scene/CinematicTransitionOverlay';
+import { AuthTransitionOverlay } from '../experience/scene/AuthTransitionOverlay';
 import { ErrorBoundary } from '../core/error/ErrorBoundary';
 
 export const RootNavigator = () => {
@@ -34,8 +34,8 @@ export const RootNavigator = () => {
           {isAuthenticated ? <AppNavigator /> : <AuthNavigator />}
         </NavigationContainer>
       </ErrorBoundary>
-      <ErrorBoundary name="CinematicTransitionOverlay">
-        <CinematicTransitionOverlay />
+      <ErrorBoundary name="AuthTransitionOverlay">
+        <AuthTransitionOverlay />
       </ErrorBoundary>
     </View>
   );

@@ -137,8 +137,18 @@ export const FloatingSearch = ({
   const [filterOpen, setFilterOpen] = React.useState(false);
   const inputRef = React.useRef<TextInput>(null);
 
+  // Centralized glow token, not a scattered inline rgba() literal. Built as
+  // plain strings here (not a function) so useAnimatedStyle's worklets can
+  // safely close over them — calling a non-worklet helper function from
+  // inside a worklet is the exact pattern that once caused a native crash
+  // in this app (see the cave-intro post-mortem).
+  const [glowR, glowG, glowB] = theme.glow.primary.rgb;
+  const glowBorderIdle = `rgba(${glowR}, ${glowG}, ${glowB}, ${theme.glow.primary.medium})`;
+  const glowPillBg = `rgba(${glowR}, ${glowG}, ${glowB}, ${theme.glow.primary.low})`;
+  const glowPillBorder = `rgba(${glowR}, ${glowG}, ${glowB}, ${theme.glow.primary.medium})`;
+
   useEffect(() => {
-    glowPulse.value = withRepeat(withTiming(1, { duration: 2800 }), -1, true);
+    glowPulse.value = withRepeat(withTiming(1, { duration: theme.motion.durations.glowBreathe }), -1, true);
   }, []);
 
   const rowStyle = useAnimatedStyle(() => {
@@ -148,7 +158,7 @@ export const FloatingSearch = ({
       borderColor: interpolateColor(
         isFocused.value,
         [0, 1],
-        ['rgba(184,134,11,0.28)', theme.colors.accent]
+        [glowBorderIdle, theme.colors.accent]
       ),
       shadowColor: theme.colors.accent,
       shadowOpacity: interpolate(activeGlow, [0, 1], [0.08, 0.32]),
@@ -186,7 +196,7 @@ export const FloatingSearch = ({
           hitSlop={6}
           style={styles.searchIconWrap}
         >
-          <Animated.View style={[styles.searchPill, searchIconStyle]}>
+          <Animated.View style={[styles.searchPill, { backgroundColor: glowPillBg, borderColor: glowPillBorder }, searchIconStyle]}>
             <Search size={15} color={theme.colors.accent} />
           </Animated.View>
         </Pressable>
@@ -277,9 +287,7 @@ const styles = StyleSheet.create({
   searchPill: {
     padding: 5,
     borderRadius: 9999,
-    backgroundColor: 'rgba(184,134,11,0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(184,134,11,0.22)',
   },
   input: {
     flex: 1,

@@ -14,13 +14,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BlurView } from 'expo-blur';
-import { X, Heart, Download, Share } from 'lucide-react-native';
+import { X, Download, Share } from 'lucide-react-native';
 import { Typography } from '../../../design/components/Typography';
 import { theme } from '../../../core/theme/theme';
 import { ImageItem } from '../services/galleryService';
 import { useArtworkController } from '../controllers/useArtworkController';
 import { useToastStore } from '../../../design/components/Toast';
 import { GlassIconButton } from '../../../design/components/GlassIconButton';
+import { AnimatedFavoriteButton } from '../../../design/components/AnimatedFavoriteButton';
 import { useArtworkShare } from '../../sharing/hooks/useArtworkShare';
 
 interface ArtworkViewerProps {
@@ -41,6 +42,7 @@ export const ArtworkViewer = ({ visible, image, onClose }: ArtworkViewerProps) =
     isFavorite,
     handleToggleFavorite,
     isDownloading,
+    downloadSuccess,
     downloadImage,
   } = useArtworkController(image);
 
@@ -217,6 +219,7 @@ export const ArtworkViewer = ({ visible, image, onClose }: ArtworkViewerProps) =
                   <GlassIconButton
                     icon={Download}
                     loading={isDownloading}
+                    success={downloadSuccess}
                     onPress={() => downloadImage(
                       () => showToast('Saved to Gallery', 'success'),
                       (msg) => showToast(msg, 'error')
@@ -237,13 +240,7 @@ export const ArtworkViewer = ({ visible, image, onClose }: ArtworkViewerProps) =
                     color={theme.colors.surface}
                     accessibilityLabel="Share this artwork"
                   />
-                  <GlassIconButton
-                    icon={Heart}
-                    onPress={handleToggleFavorite}
-                    color={isFavorite ? theme.colors.error : theme.colors.surface}
-                    fill={isFavorite ? theme.colors.error : 'transparent'}
-                    accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                  />
+                  <AnimatedFavoriteButton isFavorite={isFavorite} onToggle={handleToggleFavorite} size={22} />
                 </View>
               </AnimatedBlurView>
 

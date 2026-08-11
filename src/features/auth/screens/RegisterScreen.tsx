@@ -3,6 +3,8 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TextInput
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Animated from 'react-native-reanimated';
+import { useStaggerEntrance } from '../../../experience/interactions/useStaggerEntrance';
 import { Typography } from '../../../design/components/Typography';
 import { TextField } from '../../../design/components/TextField';
 import { PasswordField } from '../../../design/components/PasswordField';
@@ -10,21 +12,14 @@ import { SelectionField } from '../../../design/components/SelectionField';
 import { LocationAutocomplete, LocationValue } from '../../../design/components/LocationAutocomplete';
 import { Button } from '../../../design/components/Button';
 import { Toast, useToastStore } from '../../../design/components/Toast';
+import { GlassCard } from '../../../design/components/GlassCard';
 import { theme } from '../../../core/theme/theme';
 import { useAppTheme } from '../../../core/theme/ThemeProvider';
-import { palette } from '../../../core/theme/tokens';
 import { useAuthStore } from '../store/useAuthStore';
 import { authService } from '../services/authService';
-import { CaveSceneProvider } from '../../../experience/scene/CaveSceneProvider';
+import { SceneProvider } from '../../../experience/scene/SceneProvider';
 
 import { AuthNavigationProp } from '../../../navigation/types';
-
-// See LoginScreen for why this reads from the raw palette rather than the
-// reactive theme — text drawn directly on the cave (not inside a glass
-// card) must stay legible against a background that stays dark regardless
-// of the app's own light/dark setting.
-const HEADER_TITLE_COLOR = palette.warmIvory;
-const HEADER_SUBTITLE_COLOR = 'rgba(253, 251, 247, 0.62)';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -53,9 +48,6 @@ const genderOptions = [
   { label: 'Other', value: 'other' },
 ];
 
-import Animated from 'react-native-reanimated';
-import { GlassCard } from '../../../design/components/GlassCard';
-
 export const RegisterScreen = ({ navigation }: Props) => {
   const { theme: activeTheme } = useAppTheme();
   const login = useAuthStore((state) => state.login);
@@ -66,6 +58,8 @@ export const RegisterScreen = ({ navigation }: Props) => {
   const addressRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
+  const headerEntering = useStaggerEntrance(0);
+  const cardEntering = useStaggerEntrance(2);
 
   const { control, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -106,9 +100,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
   };
 
   return (
-    <CaveSceneProvider>
-      {({ logoStyle, uiStyle }) => (
-      <>
+    <SceneProvider showArch>
       <Toast />
       <KeyboardAvoidingView
         style={styles.container}
@@ -118,16 +110,14 @@ export const RegisterScreen = ({ navigation }: Props) => {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <Animated.View style={logoStyle}>
-            <View style={styles.header}>
-              <Typography variant="headingXL" weight="bold" color={HEADER_TITLE_COLOR}>Membership Application</Typography>
-              <Typography variant="body" color={HEADER_SUBTITLE_COLOR} style={{ marginTop: theme.spacing.sm }}>
-                Apply for patron membership to access curated exhibitions.
-              </Typography>
-            </View>
+          <Animated.View entering={headerEntering} style={styles.header}>
+            <Typography variant="headingXL" weight="bold">Membership Application</Typography>
+            <Typography variant="body" color={activeTheme.colors.textSecondary} style={{ marginTop: theme.spacing.sm }}>
+              Apply for patron membership to access curated exhibitions.
+            </Typography>
           </Animated.View>
 
-          <Animated.View style={uiStyle}>
+          <Animated.View entering={cardEntering}>
             <GlassCard intensity={activeTheme.glassLevels.elevated} style={styles.glassCard}>
               <View style={styles.form}>
                 <Controller
@@ -277,17 +267,19 @@ export const RegisterScreen = ({ navigation }: Props) => {
                   )}
                 />
 
-                <Button 
-                  label={isSubmitting ? "Submitting Application..." : "Submit Application"} 
-                  onPress={handleSubmit(onSubmit)} 
+                <Button
+                  label="Submit Application"
+                  onPress={handleSubmit(onSubmit)}
+                  loading={isSubmitting}
                   disabled={isSubmitting}
                   style={{ marginTop: theme.spacing.xl }}
                 />
 
-                <Button 
-                  label="Already a patron? Sign In" 
+                <Button
+                  label="Already a patron? Sign In"
                   variant="secondary"
-                  onPress={() => navigation.navigate('Login')} 
+                  onPress={() => navigation.navigate('Login')}
+                  disabled={isSubmitting}
                   style={{ marginTop: theme.spacing.md }}
                 />
               </View>
@@ -295,9 +287,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
-      </>
-      )}
-    </CaveSceneProvider>
+    </SceneProvider>
   );
 };
 

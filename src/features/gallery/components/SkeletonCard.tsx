@@ -1,75 +1,61 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withRepeat, 
-  withTiming, 
+import { View, StyleSheet } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
   withSpring,
-  interpolateColor 
+  interpolateColor,
+  useReducedMotion,
 } from 'react-native-reanimated';
 import { theme } from '../../../core/theme/theme';
-import { GALLERY_ITEM_HEIGHT } from './GalleryItem';
+import { GRID_CARD_WIDTH } from './GalleryItem';
 
-const { width } = Dimensions.get('window');
-const PADDING = theme.spacing.xl;
+const GRID_CARD_HEIGHT = GRID_CARD_WIDTH * 1.3;
 
+/** A single grid-cell-sized skeleton with a subtle shimmer — mirrors GalleryItem's footprint exactly. */
 export const SkeletonCard = () => {
+  const reducedMotion = useReducedMotion();
   const shimmer = useSharedValue(0);
 
   useEffect(() => {
-    shimmer.value = withRepeat(
-      withSpring(1, theme.springs.gentle),
-      -1,
-      true
-    );
-  }, [shimmer]);
+    if (reducedMotion) return;
+    shimmer.value = withRepeat(withSpring(1, theme.springs.gentle), -1, true);
+  }, [reducedMotion]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      backgroundColor: interpolateColor(
-        shimmer.value,
-        [0, 1],
-        [theme.colors.surface, theme.colors.surfaceHighlight]
-      ),
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      shimmer.value,
+      [0, 1],
+      [theme.colors.surface, theme.colors.surfaceHighlight]
+    ),
+  }));
 
-  return (
-    <Animated.View style={[styles.container, animatedStyle]}>
-      {/* Simulate the glass footer for author info */}
-      <View style={styles.footer}>
-        <Animated.View style={[styles.textLine, styles.titleWidth, animatedStyle]} />
-        <Animated.View style={[styles.textLine, styles.subtitleWidth, animatedStyle]} />
-      </View>
-    </Animated.View>
-  );
+  return <Animated.View style={[styles.container, animatedStyle]} />;
 };
 
+/** A full 2-column grid of skeleton cells, filling the gallery's loading state. */
+export const SkeletonGrid = ({ rows = 3 }: { rows?: number }) => (
+  <View style={styles.grid}>
+    {Array.from({ length: rows * 2 }).map((_, i) => (
+      <SkeletonCard key={i} />
+    ))}
+  </View>
+);
+
 const styles = StyleSheet.create({
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+  },
   container: {
-    width: width - PADDING * 2,
-    height: GALLERY_ITEM_HEIGHT,
-    alignSelf: 'center',
-    marginBottom: PADDING,
+    width: GRID_CARD_WIDTH,
+    height: GRID_CARD_HEIGHT,
+    marginBottom: 16,
     borderRadius: theme.borderRadii.lg,
     overflow: 'hidden',
-    justifyContent: 'flex-end',
     ...theme.elevation.card,
   },
-  footer: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  textLine: {
-    height: 14,
-    borderRadius: 7,
-    marginBottom: theme.spacing.xs,
-  },
-  titleWidth: {
-    width: '60%',
-  },
-  subtitleWidth: {
-    width: '40%',
-  }
 });

@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { View, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
 import { Typography } from '../../../design/components/Typography';
 import { theme } from '../../../core/theme/theme';
 import { SceneProvider } from '../../../experience/scene/SceneProvider';
@@ -12,11 +11,8 @@ import { ArtworkViewer } from '../../gallery/components/ArtworkViewer';
 import { ImageItem } from '../../gallery/services/galleryService';
 import { BookMarked } from 'lucide-react-native';
 
-const { width } = Dimensions.get('window');
 const PADDING = theme.spacing.md;
-const IMAGE_WIDTH = (width - PADDING * 3) / 2; // 2 columns with spacing
 
-import { GlassCard } from '../../../design/components/GlassCard';
 import { Sparkles } from 'lucide-react-native';
 
 export const FavoritesScreen = () => {
@@ -32,10 +28,9 @@ export const FavoritesScreen = () => {
   } = useFavoritesController();
 
   const renderItem = useCallback(({ item, index }: { item: ImageItem; index: number }) => (
-    <FavoriteItem 
-      item={item} 
-      index={index} 
-      width={IMAGE_WIDTH}
+    <FavoriteItem
+      item={item}
+      index={index}
       onPress={setSelectedImage}
       onRemove={toggleFavorite}
     />
@@ -84,7 +79,7 @@ export const FavoritesScreen = () => {
             icon={<BookMarked size={48} color={theme.colors.accent} />}
           />
         ) : (
-          <Animated.FlatList
+          <FlatList
             data={filteredFavorites}
             keyExtractor={(item) => item.id}
             numColumns={2}

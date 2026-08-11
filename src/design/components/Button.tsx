@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, ViewStyle, View } from 'react-native';
+import { Pressable, StyleSheet, ViewStyle, View, ActivityIndicator } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Typography } from './Typography';
 import { useAppTheme } from '../../core/theme/ThemeProvider';
@@ -11,6 +11,7 @@ interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'glass';
   style?: ViewStyle;
   disabled?: boolean;
+  loading?: boolean;
   icon?: React.ReactNode;
 }
 
@@ -22,10 +23,12 @@ export const Button = ({
   variant = 'primary',
   style,
   disabled = false,
+  loading = false,
   icon,
 }: ButtonProps) => {
   const { theme } = useAppTheme();
   const { animatedStyle, onPressIn, onPressOut } = usePressEffect(theme.motion.presets.cardPress.scale);
+  const isInteractive = !disabled && !loading;
 
   const getBackgroundColor = () => {
     if (disabled) return theme.colors.textTertiary;
@@ -50,12 +53,12 @@ export const Button = ({
   return (
     <AnimatedPressable
       onPress={onPress}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
-      disabled={disabled}
+      onPressIn={isInteractive ? onPressIn : undefined}
+      onPressOut={isInteractive ? onPressOut : undefined}
+      disabled={!isInteractive}
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled }}
+      accessibilityState={{ disabled: !isInteractive, busy: loading }}
       style={[
         styles.button,
         { backgroundColor: getBackgroundColor() },
@@ -65,10 +68,19 @@ export const Button = ({
         animatedStyle,
       ]}
     >
-      {icon && <View style={{ marginRight: theme.spacing.sm }}>{icon}</View>}
-      <Typography variant="body" weight="medium" color={getTextColor()}>
-        {label}
-      </Typography>
+      {/* Label stays mounted (invisible) while loading so the button never
+          changes size — the spinner overlays in the same footprint. */}
+      <View style={[styles.content, loading && styles.contentHidden]}>
+        {icon && <View style={{ marginRight: theme.spacing.sm }}>{icon}</View>}
+        <Typography variant="body" weight="medium" color={getTextColor()}>
+          {label}
+        </Typography>
+      </View>
+      {loading && (
+        <View style={styles.spinner} pointerEvents="none">
+          <ActivityIndicator color={getTextColor()} size="small" />
+        </View>
+      )}
     </AnimatedPressable>
   );
 };
@@ -86,5 +98,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.07,
     shadowRadius: 28,
     elevation: 10,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contentHidden: {
+    opacity: 0,
+  },
+  spinner: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
