@@ -22,6 +22,11 @@ export const MuseumBackground = ({ children, showArch = false }: MuseumBackgroun
   const { theme, isDark } = useAppTheme();
   const lightProgress = useSharedValue(0);
 
+  // Centralized glow token, not a scattered inline rgba() literal.
+  const [glowR, glowG, glowB] = theme.glow.primary.rgb;
+  const blobColor = `rgba(${glowR}, ${glowG}, ${glowB}, ${theme.glow.primary.low})`;
+  const archGlowColor = `rgba(${glowR}, ${glowG}, ${glowB}, ${theme.glow.primary.low * 0.85})`;
+
   React.useEffect(() => {
     lightProgress.value = withRepeat(
       withTiming(1, { duration: 8000 }),
@@ -54,14 +59,14 @@ export const MuseumBackground = ({ children, showArch = false }: MuseumBackgroun
 
       {/* Moving Ambient Light Blobs */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <Animated.View style={[styles.lightBlob1, blob1Style]} />
+        <Animated.View style={[styles.lightBlob1, { backgroundColor: blobColor }, blob1Style]} />
         <Animated.View style={[styles.lightBlob2, { backgroundColor: blob2Color }, blob2Style]} />
       </View>
-      
+
       {/* Architectural Arch Layer */}
       {showArch && (
         <View style={styles.archWrapper} pointerEvents="none">
-          <View style={styles.archGlow} />
+          <View style={[styles.archGlow, { backgroundColor: archGlowColor }]} />
           <View style={[
             styles.arch,
             {
@@ -98,7 +103,6 @@ const styles = StyleSheet.create({
     width: width * 0.7,
     height: width * 0.7,
     borderRadius: width * 0.35,
-    backgroundColor: 'rgba(184, 134, 11, 0.07)',
   },
   lightBlob2: {
     position: 'absolute',
@@ -124,7 +128,6 @@ const styles = StyleSheet.create({
     height: height * 0.90,
     borderTopLeftRadius: width * 0.47,
     borderTopRightRadius: width * 0.47,
-    backgroundColor: 'rgba(184, 134, 11, 0.06)',
     bottom: 0,
   },
   arch: {

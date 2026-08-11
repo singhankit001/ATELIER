@@ -9,9 +9,7 @@ import Animated, {
   useReducedMotion,
 } from 'react-native-reanimated';
 import { theme } from '../../../core/theme/theme';
-import { GRID_CARD_WIDTH } from './GalleryItem';
-
-const GRID_CARD_HEIGHT = GRID_CARD_WIDTH * 1.3;
+import { GRID_CARD_WIDTH, GRID_CARD_HEIGHT } from './GalleryItem';
 
 /** A single grid-cell-sized skeleton with a subtle shimmer — mirrors GalleryItem's footprint exactly. */
 export const SkeletonCard = () => {

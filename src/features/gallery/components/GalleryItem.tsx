@@ -14,7 +14,10 @@ const { width } = Dimensions.get('window');
 const GRID_PADDING = 16;
 const GRID_GAP = 16;
 export const GRID_CARD_WIDTH = (width - GRID_PADDING * 2 - GRID_GAP) / 2;
-const GRID_CARD_HEIGHT = GRID_CARD_WIDTH * 1.3;
+// One deliberate ratio for every artwork card in the app (gallery and
+// favorites both import this rather than each picking their own) — 4:5,
+// the classic editorial portrait crop.
+export const GRID_CARD_HEIGHT = GRID_CARD_WIDTH * 1.25;
 
 interface GalleryItemProps {
   item: ImageItem;

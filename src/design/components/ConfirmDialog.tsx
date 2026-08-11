@@ -50,12 +50,10 @@ export const ConfirmDialog = ({
               <Button label={cancelLabel} variant="secondary" onPress={onCancel} />
             </View>
             <View style={{ flex: 1 }}>
-              <Button 
-                label={confirmLabel} 
-                variant={isDestructive ? 'primary' : 'primary'} 
-                onPress={onConfirm} 
-                // Using primary, but ideally we'd pass a destructive color if we supported it in Button.
-                // For now, primary fits the premium aesthetic.
+              <Button
+                label={confirmLabel}
+                variant={isDestructive ? 'danger' : 'primary'}
+                onPress={onConfirm}
               />
             </View>
           </View>

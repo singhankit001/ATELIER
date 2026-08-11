@@ -8,7 +8,7 @@ import { usePressEffect } from '../../experience/interactions/usePressEffect';
 interface ButtonProps {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'glass';
+  variant?: 'primary' | 'secondary' | 'glass' | 'danger';
   style?: ViewStyle;
   disabled?: boolean;
   loading?: boolean;
@@ -36,6 +36,7 @@ export const Button = ({
       case 'primary': return theme.colors.primary;
       case 'secondary': return 'transparent';
       case 'glass': return theme.colors.surfaceGlass;
+      case 'danger': return theme.colors.error;
       default: return theme.colors.primary;
     }
   };
@@ -46,6 +47,7 @@ export const Button = ({
       case 'primary': return theme.colors.surface;
       case 'secondary': return theme.colors.textPrimary;
       case 'glass': return theme.colors.textPrimary;
+      case 'danger': return theme.colors.surface;
       default: return theme.colors.surface;
     }
   };

@@ -8,9 +8,7 @@ import { Typography } from '../../../design/components/Typography';
 import { AnimatedGlassCard } from '../../../design/components/AnimatedGlassCard';
 import { AnimatedFavoriteButton } from '../../../design/components/AnimatedFavoriteButton';
 import { useStaggerEntrance } from '../../../experience/interactions/useStaggerEntrance';
-import { GRID_CARD_WIDTH } from '../../gallery/components/GalleryItem';
-
-const CARD_HEIGHT = GRID_CARD_WIDTH * 1.3;
+import { GRID_CARD_WIDTH, GRID_CARD_HEIGHT } from '../../gallery/components/GalleryItem';
 
 interface FavoriteItemProps {
   item: ImageItem;
@@ -73,7 +71,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: GRID_CARD_WIDTH,
-    height: CARD_HEIGHT,
+    height: GRID_CARD_HEIGHT,
   },
   favoriteWrap: {
     position: 'absolute',
