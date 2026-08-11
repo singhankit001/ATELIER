@@ -7,7 +7,6 @@ const { width, height } = Dimensions.get('window');
 interface MuseumBackgroundProps {
   children?: React.ReactNode;
   showArch?: boolean;
-  diveAnim?: any;
 }
 
 import Animated, { 

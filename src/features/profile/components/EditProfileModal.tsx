@@ -2,9 +2,7 @@ import React, { useEffect } from 'react';
 import { Modal, StyleSheet, View, KeyboardAvoidingView, Platform, ScrollView, Pressable } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { X } from 'lucide-react-native';
-import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import { useAppTheme } from '../../../core/theme/ThemeProvider';
 import { Typography } from '../../../design/components/Typography';
 import { TextField } from '../../../design/components/TextField';
@@ -13,18 +11,7 @@ import { Button } from '../../../design/components/Button';
 import { LocationAutocomplete, LocationValue } from '../../../design/components/LocationAutocomplete';
 import { useAuthStore } from '../../auth/store/useAuthStore';
 import { useToastStore } from '../../../design/components/Toast';
-
-const profileSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
-  email: z.string().email('Invalid email address'),
-  mobile: z.string().optional(),
-  gender: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  address: z.string().optional(),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
+import { profileSchema, ProfileFormData } from '../validation/profileSchema';
 
 interface EditProfileModalProps {
   visible: boolean;

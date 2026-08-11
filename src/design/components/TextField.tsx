@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextInput, View, StyleSheet, TextInputProps } from 'react-native';
+import { TextInput, View, StyleSheet, TextInputProps, StyleProp, ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,11 +9,13 @@ import Animated, {
 import { useAppTheme } from '../../core/theme/ThemeProvider';
 import { Typography } from './Typography';
 
-export interface TextFieldProps extends TextInputProps {
+export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   label: string;
   error?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  /** Applied to the outer container, not the inner TextInput. */
+  style?: StyleProp<ViewStyle>;
 }
 
 /**
@@ -65,7 +67,7 @@ export const TextField = React.forwardRef<TextInput, TextFieldProps>(({ label, e
         styles.inputContainer,
         { backgroundColor: theme.colors.surface },
         borderStyle,
-        style as any,
+        style,
       ]}>
         <Animated.View style={[styles.labelContainer, labelStyle]}>
           <Typography variant="caption">{label}</Typography>

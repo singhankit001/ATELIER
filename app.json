@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "ATELIER",
-    "slug": "atelier",
+    "name": "premium-gallery-app",
+    "slug": "premium-gallery-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.atelier.app"
+      "bundleIdentifier": "com.anonymous.premium-gallery-app"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +17,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.atelier.app"
+      "package": "com.anonymous.premiumgalleryapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -35,7 +35,8 @@
         {
           "photosPermission": false,
           "savePhotosPermission": "ATELIER saves artwork to your photo library only when you tap Save.",
-          "isAccessMediaLocationEnabled": false
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": []
         }
       ],
       [
@@ -50,7 +51,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "864ab722-c289-40ec-9ab2-ce4a2e0d088a"
+        "projectId": "7eae75dc-247b-4e49-bdbe-09f39b1731d2"
       }
     }
   }

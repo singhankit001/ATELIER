@@ -30,7 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   isAuthenticated: false,
-  isInitializing: false,
+  isInitializing: true,
   isPortalActive: false,
 
   setPortalActive: (active: boolean) => set({ isPortalActive: active }),
@@ -79,11 +79,24 @@ export const useAuthStore = create<AuthState>((set) => ({
       // and showing Login instead of Home. 3s is long enough to never
       // fire in practice while still guaranteeing the app can't hang
       // on the loading spinner forever.
+      //
+      // The timer is explicitly cleared once the race settles either way
+      // — otherwise it dangles for up to 3s past a normal-path hydrate,
+      // which is harmless at runtime but leaves an open handle (visible
+      // as Jest's "did not exit" warning under test).
+      let timeoutId: ReturnType<typeof setTimeout>;
       const timeoutPromise = new Promise<{ token: null; user: null }>((_, reject) => {
-        setTimeout(() => reject(new Error('Hydration timeout exceeded 3000ms')), 3000);
+        timeoutId = setTimeout(() => reject(new Error('Hydration timeout exceeded 3000ms')), 3000);
       });
 
-      const { token, user } = await Promise.race([hydrationPromise, timeoutPromise]);
+      let token: string | null;
+      let user: User | null;
+      try {
+        ({ token, user } = await Promise.race([hydrationPromise, timeoutPromise]));
+      } finally {
+        clearTimeout(timeoutId!);
+      }
+
       if (token && user) {
         set({ token, user, isAuthenticated: true, isInitializing: false });
       } else {

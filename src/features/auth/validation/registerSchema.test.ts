@@ -29,6 +29,14 @@ describe('registerSchema', () => {
     }
   });
 
+  it('rejects an empty full name', () => {
+    const result = registerSchema.safeParse({ ...validPayload, name: '' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.find((i) => i.path[0] === 'name')?.message).toBe('Name is required');
+    }
+  });
+
   it('rejects an invalid email', () => {
     const result = registerSchema.safeParse({ ...validPayload, email: 'not-an-email' });
     expect(result.success).toBe(false);

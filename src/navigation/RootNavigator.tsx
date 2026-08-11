@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { useAuthStore } from '../features/auth/store/useAuthStore';
 import { useFavoritesStore } from '../features/favorites/store/useFavoritesStore';
+import { useThemeStore } from '../core/theme/useThemeStore';
 import { AuthNavigator } from './AuthNavigator';
 import { AppNavigator } from './AppNavigator';
 import { View, ActivityIndicator } from 'react-native';
@@ -13,11 +14,17 @@ export const RootNavigator = () => {
   const { theme } = useAppTheme();
   const { isAuthenticated, isInitializing, hydrate: hydrateAuth } = useAuthStore();
   const hydrateFavorites = useFavoritesStore(state => state.hydrate);
+  // Was previously never called anywhere — setMode() faithfully wrote
+  // THEME_MODE to AsyncStorage on every change, but nothing ever read it
+  // back on launch, so a user's Dark/Light choice silently reverted to
+  // System after every restart despite genuinely being persisted.
+  const hydrateTheme = useThemeStore(state => state.hydrate);
 
   useEffect(() => {
     hydrateAuth();
     hydrateFavorites();
-  }, [hydrateAuth, hydrateFavorites]);
+    hydrateTheme();
+  }, [hydrateAuth, hydrateFavorites, hydrateTheme]);
 
   if (isInitializing) {
     return (

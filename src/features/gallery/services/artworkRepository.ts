@@ -45,11 +45,23 @@ export const artworkRepository = {
     }
 
     try {
-      const asset = await MediaLibrary.createAssetAsync(downloaded.uri);
+      // expo-media-library's SDK57 rewrite moved asset/album creation off the
+      // old free functions (createAssetAsync/createAlbumAsync) onto a
+      // class-based API — the old names still exist as named exports of
+      // "expo-media-library" but are now guaranteed-throw stubs that just
+      // point at "expo-media-library/legacy" (confirmed by reading
+      // node_modules/expo-media-library/src/legacyWarnings.ts directly).
+      // Every download was silently throwing here until this was fixed.
+      const asset = await MediaLibrary.Asset.create(downloaded.uri);
 
       // On Android, we might want to create an album. iOS handles it nicely in Recents.
       if (Platform.OS === 'android') {
-        await MediaLibrary.createAlbumAsync('Gallery App', asset, false);
+        const existingAlbum = await MediaLibrary.Album.get('Gallery App');
+        if (existingAlbum) {
+          await existingAlbum.add(asset);
+        } else {
+          await MediaLibrary.Album.create('Gallery App', [asset]);
+        }
       }
     } catch (error) {
       console.warn('[Download] saving to library failed:', error);
