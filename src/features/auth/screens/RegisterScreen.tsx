@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TextInput } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Animated from 'react-native-reanimated';
 import { useStaggerEntrance } from '../../../experience/interactions/useStaggerEntrance';
 import { Typography } from '../../../design/components/Typography';
@@ -18,25 +17,9 @@ import { useAppTheme } from '../../../core/theme/ThemeProvider';
 import { useAuthStore } from '../store/useAuthStore';
 import { authService } from '../services/authService';
 import { SceneProvider } from '../../../experience/scene/SceneProvider';
+import { registerSchema, RegisterFormData as RegisterForm } from '../validation/registerSchema';
 
 import { AuthNavigationProp } from '../../../navigation/types';
-
-const registerSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
-  email: z.string().email('Invalid email address'),
-  gender: z.enum(['male', 'female', 'other'] as [string, ...string[]]).describe('Gender is required'),
-  mobile: z.string().regex(/^\d{10}$/, 'Mobile must be exactly 10 digits'),
-  city: z.string().min(1, 'Please select your city or search your current location'),
-  state: z.string().optional(),
-  address: z.string().min(5, 'Address is required'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
-type RegisterForm = z.infer<typeof registerSchema>;
 
 interface Props {
   navigation: AuthNavigationProp;

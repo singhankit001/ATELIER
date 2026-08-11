@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TextInput } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
 import { useStaggerEntrance } from '../../../experience/interactions/useStaggerEntrance';
@@ -20,17 +19,11 @@ import { authService } from '../services/authService';
 import { SceneProvider } from '../../../experience/scene/SceneProvider';
 import { AuthStackParamList } from '../../../navigation/AuthNavigator';
 import { ErrorBoundary } from '../../../core/error/ErrorBoundary';
+import { loginSchema, LoginFormData } from '../validation/loginSchema';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 };
-
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
 
 export const LoginScreen = ({ navigation }: Props) => {
   const { theme: activeTheme } = useAppTheme();

@@ -1,37 +1,16 @@
 import { storage } from '../../../core/storage/storage';
 import { User } from '../store/useAuthStore';
-
-interface StoredAccount {
-  user: User;
-  passwordHash: string;
-}
+import { resolveLogin, isEmailRegistered, buildNewAccount, AccountsRegistry } from './authLogic';
 
 const REGISTERED_USERS_KEY = 'REGISTERED_ACCOUNTS_REGISTRY';
 
+const loadAccounts = async (): Promise<AccountsRegistry> =>
+  (await storage.getItem<AccountsRegistry>(REGISTERED_USERS_KEY)) || {};
+
 export const authService = {
   login: async (email: string, password: string): Promise<{ user: User; token: string }> => {
-    const cleanEmail = email.trim().toLowerCase();
-    
-    // Check seed account
-    if (cleanEmail === 'test@example.com' && password === 'password') {
-      return {
-        user: { id: '1', name: 'Test Curator', email: cleanEmail, city: 'Paris' },
-        token: 'mock-jwt-token-123',
-      };
-    }
-
-    // Check registered accounts
-    const accounts = await storage.getItem<Record<string, StoredAccount>>(REGISTERED_USERS_KEY) || {};
-    const account = accounts[cleanEmail];
-
-    if (account && account.passwordHash === password) {
-      return {
-        user: account.user,
-        token: `mock-jwt-token-${account.user.id}`,
-      };
-    }
-
-    throw new Error('Invalid email or password. Please check your credentials.');
+    const accounts = await loadAccounts();
+    return resolveLogin(email, password, accounts);
   },
 
   /**
@@ -58,34 +37,19 @@ export const authService = {
     city: string,
     state?: string
   ): Promise<{ user: User; token: string }> => {
-    const cleanEmail = email.trim().toLowerCase();
-    const accounts = await storage.getItem<Record<string, StoredAccount>>(REGISTERED_USERS_KEY) || {};
+    const accounts = await loadAccounts();
 
-    if (accounts[cleanEmail] || cleanEmail === 'test@example.com') {
+    if (isEmailRegistered(email, accounts)) {
       throw new Error('An account with this email address already exists.');
     }
 
-    const newUser: User = {
-      id: Date.now().toString(),
-      name,
-      email: cleanEmail,
-      gender,
-      mobile,
-      address,
-      city,
-      state,
-    };
-
-    accounts[cleanEmail] = {
-      user: newUser,
-      passwordHash: password,
-    };
-
+    const { account, cleanEmail } = buildNewAccount(name, email, password, gender, mobile, address, city, state);
+    accounts[cleanEmail] = account;
     await storage.setItem(REGISTERED_USERS_KEY, accounts);
 
     return {
-      user: newUser,
-      token: `mock-jwt-token-${newUser.id}`,
+      user: account.user,
+      token: `mock-jwt-token-${account.user.id}`,
     };
   },
 };

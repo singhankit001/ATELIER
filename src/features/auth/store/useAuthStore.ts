@@ -65,9 +65,25 @@ export const useAuthStore = create<AuthState>((set) => ({
   
   hydrate: async () => {
     try {
-      const token = await storage.getItem<string>('AUTH_TOKEN');
-      const user = await storage.getItem<User>('AUTH_USER');
-      
+      const hydrationPromise = (async () => {
+        const token = await storage.getItem<string>('AUTH_TOKEN');
+        const user = await storage.getItem<User>('AUTH_USER');
+        return { token, user };
+      })();
+
+      // A pure failsafe against a genuinely hung read — not a normal-path
+      // timing budget. AsyncStorage reads are typically single-digit ms,
+      // but a real device under load can occasionally take longer than a
+      // couple hundred ms; a tight timeout here doesn't speed up the
+      // common case, it just risks silently logging out a valid session
+      // and showing Login instead of Home. 3s is long enough to never
+      // fire in practice while still guaranteeing the app can't hang
+      // on the loading spinner forever.
+      const timeoutPromise = new Promise<{ token: null; user: null }>((_, reject) => {
+        setTimeout(() => reject(new Error('Hydration timeout exceeded 3000ms')), 3000);
+      });
+
+      const { token, user } = await Promise.race([hydrationPromise, timeoutPromise]);
       if (token && user) {
         set({ token, user, isAuthenticated: true, isInitializing: false });
       } else {

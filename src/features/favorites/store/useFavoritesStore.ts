@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { favoritesRepository } from '../services/favoritesRepository';
 import { ImageItem } from '../../gallery/services/galleryService';
+import { toggleFavoriteInList, isFavoriteInList } from './favoritesLogic';
 
 interface FavoritesState {
   favorites: ImageItem[];
@@ -16,13 +17,9 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
 
   toggleFavorite: (image) => {
     const currentFavorites = get().favorites;
-    const exists = currentFavorites.some(f => f.id === image.id);
-    
+    const newFavorites = toggleFavoriteInList(currentFavorites, image);
+
     // Optimistic UI Update
-    const newFavorites = exists 
-      ? currentFavorites.filter(f => f.id !== image.id)
-      : [...currentFavorites, image];
-    
     set({ favorites: newFavorites });
 
     // Background persistence with rollback on failure
@@ -32,9 +29,7 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
     });
   },
 
-  isFavorite: (id) => {
-    return get().favorites.some(f => f.id === id);
-  },
+  isFavorite: (id) => isFavoriteInList(get().favorites, id),
 
   hydrate: async () => {
     try {

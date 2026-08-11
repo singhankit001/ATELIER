@@ -68,7 +68,11 @@ export const ArtworkViewer = ({ visible, image, onClose }: ArtworkViewerProps) =
   const swipeTranslateY = useSharedValue(0);
   const isSwiping = useSharedValue(false);
 
-  // Reset values when opened
+  // Reset values whenever the viewer opens, or the artwork it's showing
+  // changes — keyed on both so a future caller that swaps `image` while
+  // the modal stays mounted (not currently possible from the gallery UI,
+  // but not something this component should silently get wrong either)
+  // can never carry over zoom/pan state from the previous artwork.
   useEffect(() => {
     if (visible) {
       scale.value = 1;
@@ -80,7 +84,7 @@ export const ArtworkViewer = ({ visible, image, onClose }: ArtworkViewerProps) =
       swipeTranslateY.value = 0;
       isSwiping.value = false;
     }
-  }, [visible]);
+  }, [visible, image?.id]);
 
   const handleClose = useCallback(() => {
     onClose();
