@@ -217,10 +217,10 @@ eas build --platform android --profile preview
 
 This requires an Expo/EAS account (free tier is sufficient) and runs on Expo's cloud build infrastructure — no local Android SDK needed. `app.json`'s Android manifest is scoped to exactly what the app uses: `ACCESS_COARSE_LOCATION`/`ACCESS_FINE_LOCATION` (GPS on the registration form) and the media-save permission set required by `expo-media-library` for the download feature — no photo-library *read* permission is requested, since the app never picks from or browses the device's existing library.
 
-**A real build was run and finished successfully** (EAS build `d575793e-aee1-455b-bbff-2e6c54d4321a`, SDK 57, `versionCode` 1, ~21 min build time — this is the current build, containing every fix from this hardening pass, including the **download bug fix** described in [Image Download](#image-download) and the theme-persistence fix described in [Persistence](#persistence)):
+**A real build was run and finished successfully** (EAS build `6dea6ef7-31b5-4476-af01-953e16e42671`, SDK 57, built from commit `3b0034c` — confirmed via `eas build:view`'s recorded `gitCommitHash`, so this is verifiably the current code, not a stale build claimed to be current):
 
-- Install page / QR code: https://expo.dev/accounts/singhankit001/projects/premium-gallery-app/builds/d575793e-aee1-455b-bbff-2e6c54d4321a
-- Direct `.apk` artifact: https://expo.dev/artifacts/eas/8I-Fm4ZaD9IvYnZisSjkfzzO-L2HAZD_RtJQj4a9sgI.apk
+- Install page / QR code: https://expo.dev/accounts/singhankit001/projects/premium-gallery-app/builds/6dea6ef7-31b5-4476-af01-953e16e42671
+- Direct `.apk` artifact: https://expo.dev/artifacts/eas/t8mLGPBRHrKYqR5hAubvyu_Qfic7Cvo1xQT_gCa2A1s.apk
 
 Scan the QR on the install page from an Android device, or download the `.apk` directly and sideload it (enable "install from unknown sources" if prompted). See `DEVICE_QA_CHECKLIST.md` for a step-by-step manual test script to run against this exact build.
 
